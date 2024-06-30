@@ -8,7 +8,7 @@ public class DFRenderer : MonoBehaviour
     public Material dfMaterial;
     public GameObject box;
 
-    [Range(0.0f, 1.0f)]
+    [Range(0.0f, 10.0f)]
     public float sampleDistance;
 
     // Start is called before the first frame update
@@ -22,7 +22,6 @@ public class DFRenderer : MonoBehaviour
         var camera = GetComponent<Camera>();
         dfMaterial.SetVector("_CamPosition", camera.transform.position);
         dfMaterial.SetFloat("_VerticalFieldOfView", Mathf.Deg2Rad * camera.fieldOfView);
-        dfMaterial.SetFloat("_NearClipDistance", camera.nearClipPlane);
         dfMaterial.SetFloat("_FarClipDistance", camera.farClipPlane);
         dfMaterial.SetFloat("_AspectRatio", camera.aspect);
         dfMaterial.SetVector("_CamRight", camera.transform.right);

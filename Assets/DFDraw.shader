@@ -32,13 +32,7 @@ Shader "Unlit/DFDraw"
                 float4 vertex : SV_POSITION;
             };
 
-            struct lineSegment 
-            {
-                float3 pA;
-                float3 pB;
-            };
-
-            struct ray
+            struct Ray
             {
                 float3 origin;
                 float3 direction;
@@ -46,7 +40,6 @@ Shader "Unlit/DFDraw"
 
             float4 _CamPosition;
             float _VerticalFieldOfView;
-            float _NearClipDistance;
             float _FarClipDistance;
             float _AspectRatio;
             float4 _CamRight;
@@ -60,9 +53,8 @@ Shader "Unlit/DFDraw"
             float _SampleDistance;
             float4x4 _BoxInverseTransform;
 
-            ray frustumLineSegment(float verticalFieldOfView,
+            Ray fragmentRay(float verticalFieldOfView,
                 float3 camPosition,
-                float nearClipDistance,
                 float farClipDistance,
                 float aspectRatio,
                 float3 right,
@@ -70,32 +62,26 @@ Shader "Unlit/DFDraw"
                 float3 forward,
                 float2 uv)
             {
-            float sizeFar = farClipDistance * tan(verticalFieldOfView / 2);
-            float sizeNear = nearClipDistance * tan(verticalFieldOfView / 2);
+                float sizeFar = farClipDistance * tan(verticalFieldOfView / 2);
 
-            float2 normalizedUV = uv * 2 - 1;
-            float2 aspectUV = normalizedUV * float2(aspectRatio, 1);
+                float2 normalizedUV = uv * 2 - 1;
+                float2 aspectUV = normalizedUV * float2(aspectRatio, 1);
 
-            float3 pointNear = camPosition 
-                + forward * nearClipDistance
-                + right * sizeNear * aspectUV.x
-                + up * sizeNear * aspectUV.y; 
+                float3 pointFar = camPosition 
+                    + forward * farClipDistance
+                    + right * sizeFar * aspectUV.x
+                    + up * sizeFar * aspectUV.y; 
 
-            float3 pointFar = camPosition 
-                + forward * farClipDistance
-                + right * sizeFar * aspectUV.x
-                + up * sizeFar * aspectUV.y;
+                Ray ray;
+                ray.origin = camPosition;
+                ray.direction = normalize(pointFar - camPosition);
 
-            lineSegment segment;
-            segment.pA = pointNear;
-            segment.pB = pointFar;
-
-            return segment;
+                return ray;
             }
             
-            float3 pointOnLineSegment(lineSegment segment, float normalizedDistance)
+            float3 pointOnRay(Ray ray, float distance)
             {
-                return segment.pA + normalizedDistance * (segment.pB - segment.pA);
+                return ray.origin + distance * ray.direction;
             }
 
             float boxDistance(float3 samplePoint, float3 size)
@@ -125,17 +111,16 @@ Shader "Unlit/DFDraw"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                lineSegment segment = frustumLineSegment(_VerticalFieldOfView,
-                                                         _CamPosition,
-                                                         _NearClipDistance,
-                                                         _FarClipDistance,
-                                                         _AspectRatio,
-                                                         _CamRight.xyz,
-                                                         _CamUp.xyz,
-                                                         _CamForward.xyz,
-                                                         i.uv);
+                Ray ray = fragmentRay(_VerticalFieldOfView,
+                                      _CamPosition,
+                                      _FarClipDistance,
+                                      _AspectRatio,
+                                      _CamRight.xyz,
+                                      _CamUp.xyz,
+                                      _CamForward.xyz,
+                                      i.uv);
 
-                float3 samplePoint = pointOnLineSegment(segment, _SampleDistance);
+                float3 samplePoint = pointOnRay(ray, _SampleDistance);
                 float distance = sceneDistance(samplePoint);
 
                 // fixed4 col = fixed4(_SampleDistance, _SampleDistance, _SampleDistance, 1);
