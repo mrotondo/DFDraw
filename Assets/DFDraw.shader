@@ -113,8 +113,10 @@ Shader "Unlit/DFDraw"
 
             float safeScaleFactor(float4x4 transform)
             {
-                float4 transformedPoint = mul(transform, float4(1, 1, 1, 0));
-                return min(transformedPoint.x, min(transformedPoint.y, transformedPoint.z));
+                float4 x = mul(transform, float4(1, 0, 0, 0));
+                float4 y = mul(transform, float4(0, 1, 0, 0));
+                float4 z = mul(transform, float4(0, 0, 1, 0));
+                return min(length(x), min(length(y), length(z)));
             }
 
             float sceneDistance(float3 samplePoint)
