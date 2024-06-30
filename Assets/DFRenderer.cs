@@ -11,6 +11,10 @@ public class DFRenderer : MonoBehaviour
     [Range(0.0f, 10.0f)]
     public float sampleDistance;
 
+    public float distanceThreshold;
+    public int maxSteps;
+    public float maxMarchLength;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -32,6 +36,9 @@ public class DFRenderer : MonoBehaviour
         dfMaterial.SetMatrix("_BoxInverseTransform", box.transform.worldToLocalMatrix);
 
         dfMaterial.SetFloat("_SampleDistance", sampleDistance);
+        dfMaterial.SetFloat("_DistanceThreshold", distanceThreshold);
+        dfMaterial.SetInt("_MaxSteps", maxSteps);
+        dfMaterial.SetFloat("_MaxMarchLength", maxMarchLength);
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dst)

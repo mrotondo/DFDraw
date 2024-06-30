@@ -38,6 +38,13 @@ Shader "Unlit/DFDraw"
                 float3 direction;
             };
 
+            struct RayMarchResult
+            {
+                float distance;
+                float numSteps;
+                float length;
+            };
+
             float4 _CamPosition;
             float _VerticalFieldOfView;
             float _FarClipDistance;
@@ -51,6 +58,10 @@ Shader "Unlit/DFDraw"
             float4 _MainTex_ST;
 
             float _SampleDistance;
+            float _DistanceThreshold;
+            int _MaxSteps;
+            float _MaxMarchLength;
+
             float4x4 _BoxInverseTransform;
 
             Ray fragmentRay(float verticalFieldOfView,
@@ -75,7 +86,6 @@ Shader "Unlit/DFDraw"
                 Ray ray;
                 ray.origin = camPosition;
                 ray.direction = normalize(pointFar - camPosition);
-
                 return ray;
             }
             
@@ -84,22 +94,39 @@ Shader "Unlit/DFDraw"
                 return ray.origin + distance * ray.direction;
             }
 
-            float boxDistance(float3 samplePoint, float3 size)
-			{
+            float boxDistance(float3 samplePoint, float3 size) {
 				return length(max(abs(samplePoint) - size, 0.0));
 			}
 
-            float3 transform(float3 samplePoint, float4x4 inverseTransform)
-			{
+            float3 transform(float3 samplePoint, float4x4 inverseTransform) {
 				float4 heterogenousSamplePoint = float4(samplePoint.x, samplePoint.y, samplePoint.z, 1.0);
 				return mul(inverseTransform, heterogenousSamplePoint).xyz;
 			}
 
-			float sceneDistance(float3 samplePoint)
-			{
+			float sceneDistance(float3 samplePoint) {
 
 				return boxDistance(transform(samplePoint, _BoxInverseTransform), 0.5);
 			}
+
+            RayMarchResult march(Ray ray) {
+                float marchLength = 0;
+                float3 samplePoint = pointOnRay(ray, marchLength);
+                int steps = 0;
+                float distance = sceneDistance(samplePoint);
+                while (abs(distance) > _DistanceThreshold
+                       && steps < _MaxSteps 
+                       && marchLength < _MaxMarchLength) {
+                    marchLength += abs(distance);
+                    samplePoint = pointOnRay(ray, marchLength);
+                    distance = sceneDistance(samplePoint);
+                    steps++;
+                }
+                RayMarchResult result;
+                result.distance = distance;
+                result.numSteps = steps;
+                result.length = marchLength;
+                return result;
+            }
 
             v2f vert (appdata v)
             {
@@ -120,12 +147,12 @@ Shader "Unlit/DFDraw"
                                       _CamForward.xyz,
                                       i.uv);
 
-                float3 samplePoint = pointOnRay(ray, _SampleDistance);
-                float distance = sceneDistance(samplePoint);
+                // float3 samplePoint = pointOnRay(ray, _SampleDistance);
+                // float distance = sceneDistance(samplePoint);
+                // fixed4 col = fixed4(distance, distance, distance, 1);
 
-                // fixed4 col = fixed4(_SampleDistance, _SampleDistance, _SampleDistance, 1);
-                fixed4 col = fixed4(distance, distance, distance, 1);
-                // fixed4 col = tex2D(_MainTex, i.uv);
+                RayMarchResult result = march(ray);
+                fixed4 col = fixed4(result.distance, result.distance, result.distance, 1);
 
                 return col;
             }
