@@ -325,7 +325,7 @@ MonoBehaviour:
   box: {fileID: 1545595620}
   sampleDistance: 3.5
   distanceThreshold: 0.001
-  maxSteps: 50
+  maxSteps: 200
   maxMarchLength: 15
 --- !u!1 &1545595620
 GameObject:

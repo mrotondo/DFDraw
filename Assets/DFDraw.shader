@@ -63,6 +63,7 @@ Shader "Unlit/DFDraw"
             float _MaxMarchLength;
 
             float4x4 _BoxInverseTransform;
+            float4x4 _BoxTransform;
 
             Ray fragmentRay(float verticalFieldOfView,
                 float3 camPosition,
@@ -108,15 +109,20 @@ Shader "Unlit/DFDraw"
 				return mul(inverseTransform, heterogenousSamplePoint).xyz;
 			}
 
-			float sceneDistance(float3 samplePoint) {
+            float safeScaleFactor(float4x4 transform) {
+                float4 transformedPoint = mul(transform, float4(1, 1, 1, 0));
+                return min(transformedPoint.x, min(transformedPoint.y, transformedPoint.z));
+            }
 
-				return boxDistance(transform(samplePoint, _BoxInverseTransform), 0.5);
+		    float sceneDistance(float3 samplePoint) {
+                float unscaledDistance = boxDistance(transform(samplePoint, _BoxInverseTransform), 0.5);
+                return unscaledDistance * safeScaleFactor(_BoxTransform);
 			}
 
             RayMarchResult march(Ray ray) {
                 float marchLength = 0;
-                float3 samplePoint = pointOnRay(ray, marchLength);
                 int steps = 0;
+                float3 samplePoint = pointOnRay(ray, marchLength);
                 float distance = sceneDistance(samplePoint);
                 while (abs(distance) > _DistanceThreshold
                        && steps < _MaxSteps 
@@ -153,10 +159,11 @@ Shader "Unlit/DFDraw"
                                       i.uv);
 
                 // float3 samplePoint = pointOnRay(ray, _SampleDistance);
-                // float distance = sceneDistance(samplePoint);
+                // float distance = sceneDistance(samplePoint) / 10;
                 // fixed4 col = fixed4(distance, distance, distance, 1);
 
                 RayMarchResult result = march(ray);
+                float distance = result.distance;
                 float normalizedLength = result.length / _MaxMarchLength;
                 float normalizedSteps = result.steps / _MaxSteps;
                 fixed4 col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);

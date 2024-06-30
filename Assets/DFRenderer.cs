@@ -11,8 +11,11 @@ public class DFRenderer : MonoBehaviour
     [Range(0.0f, 10.0f)]
     public float sampleDistance;
 
+    [Range(0, 1)]
     public float distanceThreshold;
+    [Range(0, 200)]
     public int maxSteps;
+    [Range(0, 200)]
     public float maxMarchLength;
 
     // Start is called before the first frame update
@@ -34,6 +37,7 @@ public class DFRenderer : MonoBehaviour
         dfMaterial.SetMatrix("_CamInverseProjectionMatrix", (camera.cameraToWorldMatrix * camera.projectionMatrix).inverse);
 
         dfMaterial.SetMatrix("_BoxInverseTransform", box.transform.worldToLocalMatrix);
+        dfMaterial.SetMatrix("_BoxTransform", box.transform.localToWorldMatrix);
 
         dfMaterial.SetFloat("_SampleDistance", sampleDistance);
         dfMaterial.SetFloat("_DistanceThreshold", distanceThreshold);
