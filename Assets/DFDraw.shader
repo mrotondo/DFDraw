@@ -100,26 +100,31 @@ Shader "Unlit/DFDraw"
                 return length(samplePoint) - radius;
             }
 
-            float boxDistance(float3 samplePoint, float3 size) {
+            float boxDistance(float3 samplePoint, float3 size)
+            {
                 return length(max(abs(samplePoint) - size, 0.0));
             }
 
-            float3 transform(float3 samplePoint, float4x4 inverseTransform) {
+            float3 transform(float3 samplePoint, float4x4 inverseTransform)
+            {
                 float4 heterogenousSamplePoint = float4(samplePoint.x, samplePoint.y, samplePoint.z, 1.0);
                 return mul(inverseTransform, heterogenousSamplePoint).xyz;
             }
 
-            float safeScaleFactor(float4x4 transform) {
+            float safeScaleFactor(float4x4 transform)
+            {
                 float4 transformedPoint = mul(transform, float4(1, 1, 1, 0));
                 return min(transformedPoint.x, min(transformedPoint.y, transformedPoint.z));
             }
 
-            float sceneDistance(float3 samplePoint) {
+            float sceneDistance(float3 samplePoint)
+            {
                 float unscaledDistance = boxDistance(transform(samplePoint, _BoxInverseTransform), 0.5);
                 return unscaledDistance * safeScaleFactor(_BoxTransform);
             }
 
-            RayMarchResult march(Ray ray) {
+            RayMarchResult march(Ray ray)
+            {
                 float marchLength = 0;
                 int steps = 0;
                 float3 samplePoint = pointOnRay(ray, marchLength);
