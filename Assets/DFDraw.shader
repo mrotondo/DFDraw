@@ -41,7 +41,7 @@ Shader "Unlit/DFDraw"
             struct RayMarchResult
             {
                 float distance;
-                float numSteps;
+                float steps;
                 float length;
             };
 
@@ -94,6 +94,11 @@ Shader "Unlit/DFDraw"
                 return ray.origin + distance * ray.direction;
             }
 
+            float sphereDistance(float3 samplePoint, float radius)
+            {
+                return length(samplePoint) - radius;
+            }
+
             float boxDistance(float3 samplePoint, float3 size) {
 				return length(max(abs(samplePoint) - size, 0.0));
 			}
@@ -123,7 +128,7 @@ Shader "Unlit/DFDraw"
                 }
                 RayMarchResult result;
                 result.distance = distance;
-                result.numSteps = steps;
+                result.steps = steps;
                 result.length = marchLength;
                 return result;
             }
@@ -152,7 +157,9 @@ Shader "Unlit/DFDraw"
                 // fixed4 col = fixed4(distance, distance, distance, 1);
 
                 RayMarchResult result = march(ray);
-                fixed4 col = fixed4(result.distance, result.distance, result.distance, 1);
+                float normalizedLength = result.length / _MaxMarchLength;
+                float normalizedSteps = result.steps / _MaxSteps;
+                fixed4 col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);
 
                 return col;
             }
