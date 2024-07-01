@@ -3,7 +3,6 @@ Shader "Unlit/DFDraw"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-        _SampleDistance ("SampleDistance", Float) = 1
     }
     SubShader
     {
@@ -57,7 +56,6 @@ Shader "Unlit/DFDraw"
             sampler2D _MainTex;
             float4 _MainTex_ST;
 
-            float _SampleDistance;
             float _DistanceThreshold;
             int _MaxSteps;
             float _MaxMarchLength;
@@ -164,10 +162,6 @@ Shader "Unlit/DFDraw"
                                       _CamUp.xyz,
                                       _CamForward.xyz,
                                       i.uv);
-
-                // float3 samplePoint = pointOnRay(ray, _SampleDistance);
-                // float distance = sceneDistance(samplePoint) / 10;
-                // fixed4 col = fixed4(distance, distance, distance, 1);
 
                 RayMarchResult result = march(ray);
                 float distance = result.distance;

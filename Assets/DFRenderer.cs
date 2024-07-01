@@ -8,9 +8,6 @@ public class DFRenderer : MonoBehaviour
     public Material dfMaterial;
     public GameObject box;
 
-    [Range(0.0f, 10.0f)]
-    public float sampleDistance;
-
     [Range(0, 1)]
     public float distanceThreshold;
     [Range(0, 200)]
@@ -39,7 +36,6 @@ public class DFRenderer : MonoBehaviour
         dfMaterial.SetMatrix("_BoxInverseTransform", box.transform.worldToLocalMatrix);
         dfMaterial.SetMatrix("_BoxTransform", box.transform.localToWorldMatrix);
 
-        dfMaterial.SetFloat("_SampleDistance", sampleDistance);
         dfMaterial.SetFloat("_DistanceThreshold", distanceThreshold);
         dfMaterial.SetInt("_MaxSteps", maxSteps);
         dfMaterial.SetFloat("_MaxMarchLength", maxMarchLength);
