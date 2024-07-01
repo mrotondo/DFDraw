@@ -32,7 +32,10 @@ public class DFRenderer : MonoBehaviour
 
     private Texture3D CreateSdfVolumeTexture(int size) {
         var texture = new Texture3D(sdfVolumeSideLength, sdfVolumeSideLength, sdfVolumeSideLength, TextureFormat.RGBA32, false, true);
-        Color[] colors = new Color[size * size * size];
+        texture.filterMode = FilterMode.Point;
+        texture.wrapMode = TextureWrapMode.Clamp;
+
+        Color32[] colors = new Color32[size * size * size];
 
         float inverseResolution = 1.0f / (size - 1.0f);
         for (int z = 0; z < size; z++)
@@ -49,7 +52,7 @@ public class DFRenderer : MonoBehaviour
             }
         }
 
-        texture.SetPixels(colors);
+        texture.SetPixels32(colors);
         texture.Apply();  
         return texture;
     }

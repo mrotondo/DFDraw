@@ -193,12 +193,12 @@ Shader "Unlit/DFDraw"
                 float box_t_min = intersection.z;
                 if (is_box_hit) {
                     float3 box_hit_position = pointOnRay(ray, box_t_min);
-                    // col = tex3D(_SdfVolumeTexture, box_hit_position);
-                    col = fixed4(box_hit_position.x, box_hit_position.y, box_hit_position.z, 1);
+                    col = tex3D(_SdfVolumeTexture, box_hit_position);
+                    // col = fixed4(box_hit_position.x, box_hit_position.y, box_hit_position.z, 1);
                 } else {
                     col = fixed4(1, 1, 1, 1);
                 }
-                    
+
                 // RayMarchResult result = march(ray);
                 // float distance = result.distance;
                 // float normalizedLength = result.length / _MaxMarchLength;
