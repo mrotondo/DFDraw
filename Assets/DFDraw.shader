@@ -148,24 +148,30 @@ Shader "Unlit/DFDraw"
                 return min(length(x), min(length(y), length(z)));
             }
 
-            float sceneDistance(float3 samplePoint)
+            float boxSceneDistance(float3 samplePoint)
             {
                 float unscaledDistance = boxDistance(transform(samplePoint, _BoxInverseTransform), 0.5);
                 return unscaledDistance * safeScaleFactor(_BoxTransform);
             }
 
-            RayMarchResult march(Ray ray)
+            // needs to eventually handle positions that aren't in [(0,0,0), (1,1,1)]
+            float volumeTextureDistance(float3 samplePoint, sampler3D volumeTexture)
+            {
+                return tex3D(volumeTexture, samplePoint);
+            }
+
+            RayMarchResult volumeTextureMarch(Ray ray, sampler3D volumeTexture)
             {
                 float marchLength = 0;
                 int steps = 0;
                 float3 samplePoint = pointOnRay(ray, marchLength);
-                float distance = sceneDistance(samplePoint);
+                float distance = volumeTextureDistance(samplePoint, volumeTexture);
                 while (abs(distance) > _DistanceThreshold
-                       && steps < _MaxSteps 
+                       && steps < _MaxSteps && steps < 500 // adding to convince metal that this can be unrolled
                        && marchLength < _MaxMarchLength) {
                     marchLength += abs(distance);
                     samplePoint = pointOnRay(ray, marchLength);
-                    distance = sceneDistance(samplePoint);
+                    distance = volumeTextureDistance(samplePoint, volumeTexture);
                     steps++;
                 }
                 RayMarchResult result;
@@ -206,7 +212,12 @@ Shader "Unlit/DFDraw"
                     Ray marchingRay;
                     marchingRay.origin = box_hit_position;
                     marchingRay.direction = boundingBoxRay.direction;
-                    col = tex3D(_SdfVolumeTexture, box_hit_position);
+
+                    RayMarchResult result = volumeTextureMarch(marchingRay, _SdfVolumeTexture);
+                    float distance = result.distance;
+                    float normalizedLength = result.length / _MaxMarchLength;
+                    float normalizedSteps = result.steps / _MaxSteps;
+                    col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);
                 } else {
                     col = fixed4(1, 1, 1, 1);
                 }

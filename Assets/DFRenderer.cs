@@ -46,8 +46,14 @@ public class DFRenderer : MonoBehaviour
                 int yOffset = y * size;
                 for (int x = 0; x < size; x++)
                 {
-                    colors[x + yOffset + zOffset] = new Color(x * inverseResolution,
-                        y * inverseResolution, z * inverseResolution, 1.0f);
+                    // This only works because we're a unit cube with our lower front left at 0,0,0
+                    // We'll need a smarter transform later to get cell position
+                    Vector3 center = new(0.5f, 0.5f, 0.5f);
+                    Vector3 position = new(x * inverseResolution, y * inverseResolution, z * inverseResolution);
+                    float sphereRadius = 0.25f;
+                    float sphereDistance = Vector3.Distance(position, center) - sphereRadius;
+
+                    colors[x + yOffset + zOffset] = new Color(sphereDistance, sphereDistance, sphereDistance, 1.0f);
                 }
             }
         }
