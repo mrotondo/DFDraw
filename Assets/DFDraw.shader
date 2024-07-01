@@ -37,6 +37,12 @@ Shader "Unlit/DFDraw"
                 float3 direction;
             };
 
+            struct AABB
+            {
+                float3 minBound;
+                float3 maxBound;
+            };
+
             struct RayMarchResult
             {
                 float distance;
@@ -86,6 +92,19 @@ Shader "Unlit/DFDraw"
                 ray.origin = camPosition;
                 ray.direction = normalize(pointFar - camPosition);
                 return ray;
+            }
+
+            float3 aabbIntersection(Ray ray, AABB boundingBox) {
+                float3 inverse_dir = 1.0 / ray.direction;
+                float3 tbot = inverse_dir * (boundingBox.minBound - ray.origin);
+                float3 ttop = inverse_dir * (boundingBox.maxBound - ray.origin);
+                float3 tmin = min(ttop, tbot);
+                float3 tmax = max(ttop, tbot);
+                float2 traverse = max(tmin.xx, tmin.yz);
+                float traverselow = max(traverse.x, traverse.y);
+                traverse = min(tmax.xx, tmax.yz);
+                float traversehi = min(traverse.x, traverse.y);
+                return float3(float(traversehi > max(traverselow, 0.0)), traversehi, traverselow);
             }
             
             float3 pointOnRay(Ray ray, float distance)
@@ -154,6 +173,8 @@ Shader "Unlit/DFDraw"
 
             fixed4 frag (v2f i) : SV_Target
             {
+                fixed4 col;
+
                 Ray ray = fragmentRay(_VerticalFieldOfView,
                                       _CamPosition,
                                       _FarClipDistance,
@@ -163,11 +184,24 @@ Shader "Unlit/DFDraw"
                                       _CamForward.xyz,
                                       i.uv);
 
-                RayMarchResult result = march(ray);
-                float distance = result.distance;
-                float normalizedLength = result.length / _MaxMarchLength;
-                float normalizedSteps = result.steps / _MaxSteps;
-                fixed4 col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);
+                AABB boundingBox;
+                boundingBox.minBound = float3(-1, -1, -1);
+                boundingBox.maxBound = float3(1, 1, 1);
+                float3 intersection = aabbIntersection(ray, boundingBox);
+                float is_box_hit = intersection.x;
+                float box_t_max = intersection.y;
+                float box_t_min = intersection.z;
+                if (is_box_hit) {
+                    col = fixed4(box_t_min, box_t_min, box_t_min, 1);
+                } else {
+                    col = fixed4(1, 0, 0, 1);
+                }
+                    
+                // RayMarchResult result = march(ray);
+                // float distance = result.distance;
+                // float normalizedLength = result.length / _MaxMarchLength;
+                // float normalizedSteps = result.steps / _MaxSteps;
+                // col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);
 
                 return col;
             }

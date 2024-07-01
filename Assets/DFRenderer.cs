@@ -77,6 +77,6 @@ public class DFRenderer : MonoBehaviour
 
     void OnRenderImage(RenderTexture src, RenderTexture dst)
     {
-        Graphics.Blit(src, dst, dfMaterial);
+        Graphics.Blit(src, null, dfMaterial);
     }
 }
