@@ -2,7 +2,7 @@ Shader "Unlit/DFDraw"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        _SdfVolumeTexture ("SDF Volume Texture", 3D) = "white" {}
     }
     SubShader
     {
@@ -12,8 +12,8 @@ Shader "Unlit/DFDraw"
         Pass
         {
             CGPROGRAM
-// Upgrade NOTE: excluded shader from DX11; has structs without semantics (struct v2f members worldSpacePos)
-#pragma exclude_renderers d3d11
+            // Upgrade NOTE: excluded shader from DX11; has structs without semantics (struct v2f members worldSpacePos)
+            #pragma exclude_renderers d3d11
             #pragma vertex vert
             #pragma fragment frag
 
@@ -53,8 +53,8 @@ Shader "Unlit/DFDraw"
             float4 _CamForward;
             float4x4 _CamInverseProjectionMatrix;
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+            sampler3D _SdfVolumeTexture;
+            float4 _SdfVolumeTexture_ST;
 
             float _DistanceThreshold;
             int _MaxSteps;
@@ -148,7 +148,7 @@ Shader "Unlit/DFDraw"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.uv = TRANSFORM_TEX(v.uv, _SdfVolumeTexture);
                 return o;
             }
 

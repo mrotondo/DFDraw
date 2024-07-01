@@ -323,10 +323,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dfMaterial: {fileID: 2100000, guid: 167a7520116804f5aa339ef655419281, type: 2}
   box: {fileID: 1545595620}
-  sampleDistance: 3.5
   distanceThreshold: 0.001
   maxSteps: 200
   maxMarchLength: 15
+  sdfVolumeSideLength: 100
 --- !u!1 &1545595620
 GameObject:
   m_ObjectHideFlags: 0
