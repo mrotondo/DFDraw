@@ -185,16 +185,18 @@ Shader "Unlit/DFDraw"
                                       i.uv);
 
                 AABB boundingBox;
-                boundingBox.minBound = float3(-1, -1, -1);
+                boundingBox.minBound = float3(0, 0, 0);
                 boundingBox.maxBound = float3(1, 1, 1);
                 float3 intersection = aabbIntersection(ray, boundingBox);
                 float is_box_hit = intersection.x;
                 float box_t_max = intersection.y;
                 float box_t_min = intersection.z;
                 if (is_box_hit) {
-                    col = fixed4(box_t_min, box_t_min, box_t_min, 1);
+                    float3 box_hit_position = pointOnRay(ray, box_t_min);
+                    // col = tex3D(_SdfVolumeTexture, box_hit_position);
+                    col = fixed4(box_hit_position.x, box_hit_position.y, box_hit_position.z, 1);
                 } else {
-                    col = fixed4(1, 0, 0, 1);
+                    col = fixed4(1, 1, 1, 1);
                 }
                     
                 // RayMarchResult result = march(ray);
