@@ -217,7 +217,7 @@ Shader "Unlit/DFDraw"
                     float distance = result.distance;
                     float normalizedLength = result.length / _MaxMarchLength;
                     float normalizedSteps = result.steps / _MaxSteps;
-                    col = fixed4(distance, distance, distance, 1);
+                    col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);
                 } else {
                     col = fixed4(1, 1, 1, 1);
                 }

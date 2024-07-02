@@ -10,28 +10,28 @@ public class DFRenderer : MonoBehaviour
     public GameObject box;
 
     [Range(1, 1000)]
-    public int sdfVolumeSideLength;
-    public Texture3D sdfVolumeTexture;
+    public int SdfVolumeSideLength;
 
     [Range(0, 1)]
-    public float distanceThreshold;
+    public float DistanceThreshold;
     [Range(0, 200)]
-    public int maxSteps;
+    public int MaxSteps;
     [Range(0, 200)]
-    public float maxMarchLength;
+    public float MaxMarchLength;
 
+    private Texture3D _sdfVolumeTexture;
 
     // Start is called before the first frame update
     void Start()
     {
         // Try without createUnitialized=true if things aren't working
         // Try to find a smaller representation for this later - maybe A8? Since we only need distance.
-        sdfVolumeTexture = CreateSdfVolumeTexture(sdfVolumeSideLength);
-        dfMaterial.SetTexture("_SdfVolumeTexture", sdfVolumeTexture);
+        _sdfVolumeTexture = CreateSdfVolumeTexture(SdfVolumeSideLength);
+        dfMaterial.SetTexture("_SdfVolumeTexture", _sdfVolumeTexture);
     }
 
     private Texture3D CreateSdfVolumeTexture(int size) {
-        var texture = new Texture3D(sdfVolumeSideLength, sdfVolumeSideLength, sdfVolumeSideLength, TextureFormat.Alpha8, false, true);
+        var texture = new Texture3D(SdfVolumeSideLength, SdfVolumeSideLength, SdfVolumeSideLength, TextureFormat.Alpha8, false, true);
         texture.filterMode = FilterMode.Point;
         texture.wrapMode = TextureWrapMode.Clamp;
 
@@ -79,9 +79,9 @@ public class DFRenderer : MonoBehaviour
         dfMaterial.SetMatrix("_BoxInverseTransform", box.transform.worldToLocalMatrix);
         dfMaterial.SetMatrix("_BoxTransform", box.transform.localToWorldMatrix);
 
-        dfMaterial.SetFloat("_DistanceThreshold", distanceThreshold);
-        dfMaterial.SetInt("_MaxSteps", maxSteps);
-        dfMaterial.SetFloat("_MaxMarchLength", maxMarchLength);
+        dfMaterial.SetFloat("_DistanceThreshold", DistanceThreshold);
+        dfMaterial.SetInt("_MaxSteps", MaxSteps);
+        dfMaterial.SetFloat("_MaxMarchLength", MaxMarchLength);
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dst)
