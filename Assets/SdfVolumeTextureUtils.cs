@@ -1,3 +1,4 @@
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -22,7 +23,7 @@ public class SdfVolumeTextureUtils
 
     private static void InitSdfVolumeTexture(Texture3D sdfVolumeTexture, float initDistance)
     {
-        Color[] colors = new Color[sdfVolumeTexture.width * sdfVolumeTexture.height * sdfVolumeTexture.depth];
+        byte[] data = new byte[sdfVolumeTexture.width * sdfVolumeTexture.height * sdfVolumeTexture.depth];
         
         for (int z = 0; z < sdfVolumeTexture.depth; z++)
         {
@@ -32,43 +33,18 @@ public class SdfVolumeTextureUtils
                 int yOffset = y * sdfVolumeTexture.width;
                 for (int x = 0; x < sdfVolumeTexture.width; x++)
                 {
-                    colors[x + yOffset + zOffset] = new Color(0, 0, 0, DistanceToAlpha(initDistance));
+                    data[x + yOffset + zOffset] = DistanceToByte(initDistance);
                 }
             }
         }
-        sdfVolumeTexture.SetPixels(colors);
-        sdfVolumeTexture.Apply();
-    }
-
-    public static void ScaleSdfVolumeTexture(Texture3D sdfVolumeTexture, float distanceScale)
-    {
-        Color[] colors = sdfVolumeTexture.GetPixels();
-
-        for (int z = 0; z < sdfVolumeTexture.depth; z++)
-        {
-            int zOffset = z * sdfVolumeTexture.height * sdfVolumeTexture.width;
-            for (int y = 0; y < sdfVolumeTexture.height; y++)
-            {
-                int yOffset = y * sdfVolumeTexture.width;
-                for (int x = 0; x < sdfVolumeTexture.width; x++)
-                {
-                    int index = x + yOffset + zOffset;
-                    float oldDistance = AlphaToDistance(colors[index].a);
-                    if (index % 1000 == 0) {
-                        Debug.Log("Old distance is: " + oldDistance);
-                    }
-                    colors[index] = new Color(0, 0, 0, DistanceToAlpha(oldDistance * distanceScale));
-                }
-            }
-        }
-        sdfVolumeTexture.SetPixels(colors);
+        sdfVolumeTexture.SetPixelData<byte>(data, 0);
         sdfVolumeTexture.Apply();
     }
 
     // Naive implementation! Could be improved by breaking the texture up into cells and only updating cells that overlap with the sphere
     public static void BlitSphereToSdfVolumeTexture(Texture3D sdfVolumeTexture, Vector3 sphereCenter, float sphereRadius)
     {
-        Color[] colors = sdfVolumeTexture.GetPixels();
+        NativeArray<byte> data = sdfVolumeTexture.GetPixelData<byte>(0);
 
         for (int z = 0; z < sdfVolumeTexture.depth; z++)
         {
@@ -86,26 +62,26 @@ public class SdfVolumeTextureUtils
                         z / (sdfVolumeTexture.depth - 1.0f));
                     float sphereDistance = Vector3.Distance(position, sphereCenter) - sphereRadius;
 
-                    float oldDistance = AlphaToDistance(colors[x + yOffset + zOffset].a);
+                    float oldDistance = ByteToDistance(data[x + yOffset + zOffset]);
                     if (sphereDistance < oldDistance)
                     {
-                        colors[x + yOffset + zOffset] = new Color(0, 0, 0, DistanceToAlpha(sphereDistance));
+                        data[x + yOffset + zOffset] = DistanceToByte(sphereDistance);
                     }
                 }
             }
         }
-        sdfVolumeTexture.SetPixels(colors);
+        sdfVolumeTexture.SetPixelData<byte>(data, 0);
         sdfVolumeTexture.Apply();
     }
 
-    private static float DistanceToAlpha(float distance)
+    private static byte DistanceToByte(float distance)
     {
-        return distance * 0.5f + 0.5f; // [-1, 1] => [0, 1]
+        return (byte)((distance * 0.5f + 0.5f) * 255); // [-1, 1] => [0, 255]
     }
 
-    private static float AlphaToDistance(float alpha)
+    private static float ByteToDistance(byte alpha)
     {
-        return alpha * 2 - 1; // [0, 1] => [-1, 1]
+        return (alpha / 255.0f) * 2 - 1; // [0, 255] => [-1, 1]
     }
 
 }
