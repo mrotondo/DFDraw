@@ -164,6 +164,18 @@ Shader "Unlit/DFDraw"
                 return alphaToDistance(tex3D(volumeTexture, samplePoint).a);
             }
 
+            float3 volumeTextureNormal(float3 samplePoint, sampler3D volumeTexture)
+            {
+                float3 xEpsilon = float3(0.01, 0.0, 0.0);
+                float3 yEpsilon = float3(0.0, 0.01, 0.0);
+                float3 zEpsilon = float3(0.0, 0.0, 0.01);
+                float3 gradient = float3(
+                    volumeTextureDistance(samplePoint + xEpsilon, volumeTexture) - volumeTextureDistance(samplePoint - xEpsilon, volumeTexture),
+                    volumeTextureDistance(samplePoint + yEpsilon, volumeTexture) - volumeTextureDistance(samplePoint - yEpsilon, volumeTexture),
+                    volumeTextureDistance(samplePoint + zEpsilon, volumeTexture) - volumeTextureDistance(samplePoint - zEpsilon, volumeTexture));
+                return normalize(gradient) * 0.5 + 0.5;
+            }
+
             RayMarchResult volumeTextureMarch(Ray ray, sampler3D volumeTexture)
             {
                 float marchLength = 0;
@@ -223,7 +235,8 @@ Shader "Unlit/DFDraw"
                         float normalizedLength = result.length / _MaxMarchLength;
                         float normalizedSteps = result.steps / _MaxSteps;
                         float3 position = pointOnRay(marchingRay, result.length);
-                        col = fixed4(position.x, position.y, position.z, 1);
+                        float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
+                        col = fixed4(normal, 1);
                     } else {
                         col = fixed4(0.9, 0.9, 0.9, 1);
                     }
