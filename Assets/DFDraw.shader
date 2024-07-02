@@ -219,9 +219,14 @@ Shader "Unlit/DFDraw"
 
                     RayMarchResult result = volumeTextureMarch(marchingRay, _SdfVolumeTexture);
                     float distance = result.distance;
-                    float normalizedLength = result.length / _MaxMarchLength;
-                    float normalizedSteps = result.steps / _MaxSteps;
-                    col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);
+                    if (distance < _DistanceThreshold) {
+                        float normalizedLength = result.length / _MaxMarchLength;
+                        float normalizedSteps = result.steps / _MaxSteps;
+                        float3 position = pointOnRay(marchingRay, result.length);
+                        col = fixed4(position.x, position.y, position.z, 1);
+                    } else {
+                        col = fixed4(0.9, 0.9, 0.9, 1);
+                    }
                 } else {
                     col = fixed4(1, 1, 1, 1);
                 }
