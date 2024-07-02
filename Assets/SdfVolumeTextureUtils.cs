@@ -7,7 +7,7 @@ public class SdfVolumeTextureUtils
     {
         var texture = new Texture3D(size, size, size, TextureFormat.Alpha8, true)
         {
-            filterMode = FilterMode.Point,
+            filterMode = FilterMode.Bilinear,
             wrapMode = TextureWrapMode.Clamp
         };
 
@@ -43,7 +43,6 @@ public class SdfVolumeTextureUtils
     public static void ScaleSdfVolumeTexture(Texture3D sdfVolumeTexture, float distanceScale)
     {
         Color[] colors = sdfVolumeTexture.GetPixels();
-
 
         for (int z = 0; z < sdfVolumeTexture.depth; z++)
         {
