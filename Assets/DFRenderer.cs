@@ -9,14 +9,10 @@ public class DFRenderer : MonoBehaviour
 
     public GameObject box;
 
-    [Range(1, 1000)]
     public int SdfVolumeSideLength;
 
-    [Range(0, 1)]
     public float DistanceThreshold;
-    [Range(0, 200)]
     public int MaxSteps;
-    [Range(0, 200)]
     public float MaxMarchLength;
 
     private Texture3D _sdfVolumeTexture;
@@ -26,41 +22,8 @@ public class DFRenderer : MonoBehaviour
     {
         // Try without createUnitialized=true if things aren't working
         // Try to find a smaller representation for this later - maybe A8? Since we only need distance.
-        _sdfVolumeTexture = CreateSdfVolumeTexture(SdfVolumeSideLength);
+        _sdfVolumeTexture = SdfVolumeTextureUtils.CreateCubeSdfVolumeTexture(SdfVolumeSideLength);
         dfMaterial.SetTexture("_SdfVolumeTexture", _sdfVolumeTexture);
-    }
-
-    private Texture3D CreateSdfVolumeTexture(int size) {
-        var texture = new Texture3D(SdfVolumeSideLength, SdfVolumeSideLength, SdfVolumeSideLength, TextureFormat.Alpha8, false, true);
-        texture.filterMode = FilterMode.Point;
-        texture.wrapMode = TextureWrapMode.Clamp;
-
-        Color32[] colors = new Color32[size * size * size];
-
-        float inverseResolution = 1.0f / (size - 1.0f);
-        for (int z = 0; z < size; z++)
-        {
-            int zOffset = z * size * size;
-            for (int y = 0; y < size; y++)
-            {
-                int yOffset = y * size;
-                for (int x = 0; x < size; x++)
-                {
-                    // This only works because we're a unit cube with our lower front left at 0,0,0
-                    // We'll need a smarter transform later to get cell position
-                    Vector3 center = new(0.5f, 0.5f, 0.5f);
-                    Vector3 position = new(x * inverseResolution, y * inverseResolution, z * inverseResolution);
-                    float sphereRadius = 0.25f;
-                    float sphereDistance = Vector3.Distance(position, center) - sphereRadius;
-
-                    colors[x + yOffset + zOffset] = new Color(0, 0, 0, sphereDistance);
-                }
-            }
-        }
-
-        texture.SetPixels32(colors);
-        texture.Apply();  
-        return texture;
     }
 
     // Update is called once per frame

@@ -154,10 +154,14 @@ Shader "Unlit/DFDraw"
                 return unscaledDistance * safeScaleFactor(_BoxTransform);
             }
 
+            float alphaToDistance(float alpha) {
+                return alpha * 2 - 1;
+            }
+
             // needs to eventually handle positions that aren't in [(0,0,0), (1,1,1)]
             float volumeTextureDistance(float3 samplePoint, sampler3D volumeTexture)
             {
-                return tex3D(volumeTexture, samplePoint).a;
+                return alphaToDistance(tex3D(volumeTexture, samplePoint).a);
             }
 
             RayMarchResult volumeTextureMarch(Ray ray, sampler3D volumeTexture)
@@ -167,7 +171,7 @@ Shader "Unlit/DFDraw"
                 float3 samplePoint = pointOnRay(ray, marchLength);
                 float distance = volumeTextureDistance(samplePoint, volumeTexture);
                 while (abs(distance) > _DistanceThreshold
-                       && steps < _MaxSteps && steps < 200 // adding to convince metal that this can be unrolled
+                       && steps < _MaxSteps && steps < 100 // adding to convince metal that this can be unrolled
                        && marchLength < _MaxMarchLength) {
                     marchLength += abs(distance);
                     samplePoint = pointOnRay(ray, marchLength);
@@ -217,7 +221,7 @@ Shader "Unlit/DFDraw"
                     float distance = result.distance;
                     float normalizedLength = result.length / _MaxMarchLength;
                     float normalizedSteps = result.steps / _MaxSteps;
-                    col = fixed4(normalizedSteps, normalizedSteps, normalizedSteps, 1);
+                    col = fixed4(distance, distance, distance, 1);
                 } else {
                     col = fixed4(1, 1, 1, 1);
                 }
