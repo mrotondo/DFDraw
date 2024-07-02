@@ -31,7 +31,7 @@ public class DFRenderer : MonoBehaviour
     }
 
     private Texture3D CreateSdfVolumeTexture(int size) {
-        var texture = new Texture3D(sdfVolumeSideLength, sdfVolumeSideLength, sdfVolumeSideLength, TextureFormat.RGBA32, false, true);
+        var texture = new Texture3D(sdfVolumeSideLength, sdfVolumeSideLength, sdfVolumeSideLength, TextureFormat.Alpha8, false, true);
         texture.filterMode = FilterMode.Point;
         texture.wrapMode = TextureWrapMode.Clamp;
 
@@ -53,7 +53,7 @@ public class DFRenderer : MonoBehaviour
                     float sphereRadius = 0.25f;
                     float sphereDistance = Vector3.Distance(position, center) - sphereRadius;
 
-                    colors[x + yOffset + zOffset] = new Color(sphereDistance, sphereDistance, sphereDistance, 1.0f);
+                    colors[x + yOffset + zOffset] = new Color(0, 0, 0, sphereDistance);
                 }
             }
         }
