@@ -8,7 +8,7 @@ public class SdfVolumeTextureUtils
 {
     public static Texture3D CreateCubeSdfVolumeTexture(int size)
     {
-        var texture = new Texture3D(size, size, size, TextureFormat.Alpha8, true)
+        var texture = new Texture3D(size, size, size, TextureFormat.Alpha8, false, true)
         {
             filterMode = FilterMode.Bilinear,
             wrapMode = TextureWrapMode.Clamp
@@ -23,9 +23,9 @@ public class SdfVolumeTextureUtils
         return texture;
     }
 
-    private static void InitSdfVolumeTexture(Texture3D sdfVolumeTexture, float initDistance)
+    private static void UpdateCells(Texture3D sdfVolumeTexture, Func<Vector3, float, byte> valueFunc)
     {
-        byte[] data = new byte[sdfVolumeTexture.width * sdfVolumeTexture.height * sdfVolumeTexture.depth];
+        NativeArray<byte> data = sdfVolumeTexture.GetPixelData<byte>(0);
 
         for (int z = 0; z < sdfVolumeTexture.depth; z++)
         {
@@ -35,12 +35,27 @@ public class SdfVolumeTextureUtils
                 int yOffset = y * sdfVolumeTexture.width;
                 for (int x = 0; x < sdfVolumeTexture.width; x++)
                 {
-                    data[x + yOffset + zOffset] = DistanceToByte(initDistance);
+                    // This only works because we're a unit cube with our lower front left at 0,0,0
+                    // We'll need a smarter transform later to get cell position
+                    Vector3 samplePosition = new(
+                        x / (sdfVolumeTexture.width - 1.0f),
+                        y / (sdfVolumeTexture.height - 1.0f),
+                        z / (sdfVolumeTexture.depth - 1.0f));
+
+                    float oldDistance = ByteToDistance(data[x + yOffset + zOffset]);
+                    data[x + yOffset + zOffset] = valueFunc(samplePosition, oldDistance);
                 }
             }
         }
         sdfVolumeTexture.SetPixelData<byte>(data, 0);
         sdfVolumeTexture.Apply();
+    }
+
+    private static void InitSdfVolumeTexture(Texture3D sdfVolumeTexture, float initDistance)
+    {
+        UpdateCells(sdfVolumeTexture, (samplePosition, oldDistance) => {
+            return DistanceToByte(initDistance);
+        });
     }
 
     // Naive implementation! Could be improved by breaking the texture up into cells and only updating cells that overlap with the sphere
@@ -98,6 +113,11 @@ public class SdfVolumeTextureUtils
     {
         return samplePoint.magnitude - radius;
     }
+
+    // private static float BoxDistance(Vector3 samplePoint, Vector3 size)
+    // {
+    //     return length(max(abs(samplePoint) - size, 0.0));
+    // }
 
     private static byte DistanceToByte(float distance)
     {
