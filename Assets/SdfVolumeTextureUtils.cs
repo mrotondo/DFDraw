@@ -64,8 +64,8 @@ public class SdfVolumeTextureUtils
                         z / (sdfVolumeTexture.depth - 1.0f));
 
                     Vector3 samplePositionInObjectSpace = WorldToObjectSpace(samplePosition, sphereTrs);
-                    float unscaledSphereDistance = SphereDistance(samplePositionInObjectSpace, 0.5f);
-                    float sphereDistance = SafeScaleFactor(sphereTrs) * unscaledSphereDistance;
+                    float objectSpaceSphereDistance = SphereDistance(samplePositionInObjectSpace, 0.5f);
+                    float sphereDistance = MinimumObjectToWorldScaleFactor(sphereTrs) * objectSpaceSphereDistance;
 
                     float oldDistance = ByteToDistance(data[x + yOffset + zOffset]);
                     if (sphereDistance < oldDistance)
@@ -86,7 +86,7 @@ public class SdfVolumeTextureUtils
         return objectTrs.inverse * homogeneousPoint;
     }
 
-    private static float SafeScaleFactor(Matrix4x4 objectTrs)
+    private static float MinimumObjectToWorldScaleFactor(Matrix4x4 objectTrs)
     {
         Vector3 x = objectTrs * Vector3.right;
         Vector3 y = objectTrs * Vector3.up;
