@@ -228,8 +228,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dfMaterial: {fileID: 2100000, guid: 167a7520116804f5aa339ef655419281, type: 2}
-  box: {fileID: 0}
-  SdfVolumeSideLength: 5
+  SdfVolumeSideLength: 200
   DistanceThreshold: 0.05
   MaxSteps: 50
   MaxMarchLength: 2

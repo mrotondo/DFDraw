@@ -14,9 +14,12 @@ public class SdfVolumeTextureUtils
 
         InitSdfVolumeTexture(texture, 1.0f);
 
-        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, Vector3.one * 0.5f));
-        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.7f, Quaternion.identity, Vector3.one * 0.4f));
-        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.2f, Quaternion.identity, Vector3.one * 0.2f));
+        // BlitBoxToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, new(0.9f, 0.9f, 0.5f)));
+        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, new(0.8f, 0.8f, 0.8f)));
+
+        // BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, Vector3.one * 0.5f));
+        // BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.7f, Quaternion.identity, Vector3.one * 0.4f));
+        // BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.2f, Quaternion.identity, Vector3.one * 0.2f));
 
         return texture;
     }
@@ -57,12 +60,19 @@ public class SdfVolumeTextureUtils
         });
     }
 
-    public static void BlitSphereToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 sphereTrs)
+    public static void BlitSphereToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 trs)
     {
-        BlitShapeToSdfVolumeTexture(sdfVolumeTexture, sphereTrs, UnitSphereDistance);
+        BlitShapeToSdfVolumeTexture(sdfVolumeTexture, trs, UnitSphereDistance);
+    }
+
+    public static void BlitBoxToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 trs)
+    {
+        BlitShapeToSdfVolumeTexture(sdfVolumeTexture, trs, UnitCubeDistance);
     }
 
     // Naive implementation! Could be improved by breaking the texture up into cells and only updating cells that overlap with the sphere
+    // Warning! Do not use non-uniform scale vectors: At least according to Inigo, they can't generate correct SDF:
+    // https://iquilezles.org/articles/distfunctions/#:~:text=with%20uniform%20scaling.-,Non%20uniform%20scaling,-is%20not%20possible
     private static void BlitShapeToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 objectTrs, Func<Vector3, float> shapeDistanceFunction)
     {
         UpdateSdf(sdfVolumeTexture, (samplePosition, oldDistance) =>
@@ -81,12 +91,10 @@ public class SdfVolumeTextureUtils
         return objectTrs.inverse * homogeneousPoint;
     }
 
+    // Assumes a uniform scale (see warning above)
     private static float MinimumObjectToWorldScaleFactor(Matrix4x4 objectTrs)
     {
-        Vector3 x = objectTrs * Vector3.right;
-        Vector3 y = objectTrs * Vector3.up;
-        Vector3 z = objectTrs * Vector3.forward;
-        return Math.Min(x.magnitude, Math.Min(y.magnitude, z.magnitude));
+        return (objectTrs * Vector3.right).magnitude;
     }
 
     private static float UnitSphereDistance(Vector3 samplePoint)
