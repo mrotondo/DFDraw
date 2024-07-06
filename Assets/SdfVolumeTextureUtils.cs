@@ -1,8 +1,6 @@
 using System;
-using TreeEditor;
 using Unity.Collections;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class SdfVolumeTextureUtils
 {
@@ -59,15 +57,20 @@ public class SdfVolumeTextureUtils
         });
     }
 
-    // Naive implementation! Could be improved by breaking the texture up into cells and only updating cells that overlap with the sphere
     public static void BlitSphereToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 sphereTrs)
+    {
+        BlitShapeToSdfVolumeTexture(sdfVolumeTexture, sphereTrs, UnitSphereDistance);
+    }
+
+    // Naive implementation! Could be improved by breaking the texture up into cells and only updating cells that overlap with the sphere
+    private static void BlitShapeToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 objectTrs, Func<Vector3, float> shapeDistanceFunction)
     {
         UpdateSdf(sdfVolumeTexture, (samplePosition, oldDistance) =>
         {
-            Vector3 samplePositionInObjectSpace = WorldToObjectSpace(samplePosition, sphereTrs);
-            float objectSpaceSphereDistance = SphereDistance(samplePositionInObjectSpace, 0.5f);
-            float sphereDistance = MinimumObjectToWorldScaleFactor(sphereTrs) * objectSpaceSphereDistance;
-            return Math.Min(sphereDistance, oldDistance);
+            Vector3 samplePositionInObjectSpace = WorldToObjectSpace(samplePosition, objectTrs);
+            float objectSpaceDistance = shapeDistanceFunction(samplePositionInObjectSpace);
+            float newDistance = MinimumObjectToWorldScaleFactor(objectTrs) * objectSpaceDistance;
+            return Math.Min(newDistance, oldDistance);
         });
     }
 
@@ -86,15 +89,25 @@ public class SdfVolumeTextureUtils
         return Math.Min(x.magnitude, Math.Min(y.magnitude, z.magnitude));
     }
 
+    private static float UnitSphereDistance(Vector3 samplePoint)
+    {
+        return SphereDistance(samplePoint, 0.5f);
+    }
+
     private static float SphereDistance(Vector3 samplePoint, float radius)
     {
         return samplePoint.magnitude - radius;
     }
 
-    // private static float BoxDistance(Vector3 samplePoint, Vector3 size)
-    // {
-    //     return length(max(abs(samplePoint) - size, 0.0));
-    // }
+    private static float UnitCubeDistance(Vector3 samplePoint)
+    {
+        return BoxDistance(samplePoint, Vector3.one * 0.5f);
+    }
+
+    private static float BoxDistance(Vector3 samplePoint, Vector3 size)
+    {
+        return Vector3.Max(VectorUtils.Abs(samplePoint) - size, Vector3.zero).magnitude;
+    }
 
     private static byte DistanceToByte(float distance)
     {
