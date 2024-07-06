@@ -7,18 +7,12 @@ public class DFRenderer : MonoBehaviour
 {
     public Material dfMaterial;
 
-    public int SdfVolumeSideLength;
-
     public float DistanceThreshold;
     public int MaxSteps;
     public float MaxMarchLength;
 
-    private Texture3D _sdfVolumeTexture;
-
-    void Start()
-    {
-        _sdfVolumeTexture = SdfVolumeTextureUtils.CreateCubeSdfVolumeTexture(SdfVolumeSideLength);
-        dfMaterial.SetTexture("_SdfVolumeTexture", _sdfVolumeTexture);
+    public Texture3D SdfVolumeTexture {
+        set => dfMaterial.SetTexture("_SdfVolumeTexture", value);
     }
 
     void Update()

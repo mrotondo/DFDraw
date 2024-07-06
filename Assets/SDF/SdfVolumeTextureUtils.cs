@@ -14,13 +14,6 @@ public class SdfVolumeTextureUtils
 
         InitSdfVolumeTexture(texture, 1.0f);
 
-        // BlitBoxToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, new(0.9f, 0.9f, 0.5f)));
-        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, Vector3.one * 0.6f));
-
-        BlitBoxToSdfVolumeTexture(texture, Matrix4x4.TRS(new(0.2f, 0.8f, 0.2f), Quaternion.identity, Vector3.one * 0.15f));
-        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.7f, Quaternion.identity, Vector3.one * 0.4f));
-        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.2f, Quaternion.identity, Vector3.one * 0.2f));
-
         return texture;
     }
 
@@ -80,7 +73,8 @@ public class SdfVolumeTextureUtils
             Vector3 samplePositionInObjectSpace = WorldToObjectSpace(samplePosition, objectTrs);
             float objectSpaceDistance = shapeDistanceFunction(samplePositionInObjectSpace);
             float newDistance = MinimumObjectToWorldScaleFactor(objectTrs) * objectSpaceDistance;
-            return SmoothMinCircular(newDistance, oldDistance, 0.05f);
+            // return SmoothMinCircular(newDistance, oldDistance, 0.01f);
+            return Mathf.Min(newDistance, oldDistance);
         });
     }
 
