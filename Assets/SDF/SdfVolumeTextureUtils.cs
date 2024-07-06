@@ -15,11 +15,11 @@ public class SdfVolumeTextureUtils
         InitSdfVolumeTexture(texture, 1.0f);
 
         // BlitBoxToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, new(0.9f, 0.9f, 0.5f)));
-        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, new(0.8f, 0.8f, 0.8f)));
+        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, Vector3.one * 0.6f));
 
-        // BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.5f, Quaternion.identity, Vector3.one * 0.5f));
-        // BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.7f, Quaternion.identity, Vector3.one * 0.4f));
-        // BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.2f, Quaternion.identity, Vector3.one * 0.2f));
+        BlitBoxToSdfVolumeTexture(texture, Matrix4x4.TRS(new(0.2f, 0.8f, 0.2f), Quaternion.identity, Vector3.one * 0.15f));
+        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.7f, Quaternion.identity, Vector3.one * 0.4f));
+        BlitSphereToSdfVolumeTexture(texture, Matrix4x4.TRS(Vector3.one * 0.2f, Quaternion.identity, Vector3.one * 0.2f));
 
         return texture;
     }
@@ -80,8 +80,17 @@ public class SdfVolumeTextureUtils
             Vector3 samplePositionInObjectSpace = WorldToObjectSpace(samplePosition, objectTrs);
             float objectSpaceDistance = shapeDistanceFunction(samplePositionInObjectSpace);
             float newDistance = MinimumObjectToWorldScaleFactor(objectTrs) * objectSpaceDistance;
-            return Math.Min(newDistance, oldDistance);
+            return SmoothMinCircular(newDistance, oldDistance, 0.05f);
         });
+    }
+
+    private static float SmoothMinCircular(float a, float b, float k)
+    {
+        const float sqrt_of_one_half = 0.7071067812f;
+        const float kNorm = 1.0f / (1.0f - sqrt_of_one_half);
+        k *= kNorm;
+        float h = Mathf.Max(k - Mathf.Abs(a - b), 0.0f) / k;
+        return Mathf.Min(a, b) - k * 0.5f * (1.0f + h - Mathf.Sqrt(1.0f - h * (h - 2.0f)));
     }
 
     private static Vector4 WorldToObjectSpace(Vector3 position, Matrix4x4 objectTrs)
