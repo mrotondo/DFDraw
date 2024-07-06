@@ -244,7 +244,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0448c1e9ebd7448dbaf2f6a5d2779a0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SdfVolumeSideLength: 20
+  SdfVolumeSideLength: 30
+  MarkerPosition: {x: 0.3, y: 0, z: 0.5}
+  MarkerMovementSpeed: 0.7
+  MarkerDirection: {x: -0.5, y: 0.5, z: 0}
+  MarkerDirectionDrift: {x: -0, y: -0, z: -0.70710677, w: 0.70710677}
+  MarkerMaxTurnSpeed: 40
+  MarkerMaxTurnSpeedGrowthRate: 1.4
+  MarkerRadius: 0.1
+  MarkerRadiusGrowthRate: 0.3
 --- !u!1 &1915091893
 GameObject:
   m_ObjectHideFlags: 0

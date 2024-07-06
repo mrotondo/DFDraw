@@ -11,7 +11,7 @@ public class Marker
     private float _scale;
 
     private List<Matrix4x4> _marks;
-    private float _translationMarkThreshold = 0.3f;  // units: world space distance
+    private float _translationMarkThreshold = 0.03f;  // units: world space distance
     private float _rotationMarkThreshold = 5f;  // units: degrees
     private float _scaleMarkThreshold = 0.2f;  // units: ratio
 
