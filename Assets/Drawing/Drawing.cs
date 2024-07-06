@@ -22,27 +22,21 @@ public class Drawing : MonoBehaviour
         var renderer = GetComponent<DFRenderer>();
         renderer.SdfVolumeTexture = _sdfVolumeTexture;
 
-        _markerPosition = new(0.5f, 0.5f, 0.5f);
+        _markerPosition = new(0.5f, 0.0f, 0.5f);
         _markerDirection = Vector3.up;
         _markerDirectionDrift = Quaternion.AngleAxis(90, Vector3.forward);
         _markerMaxTurnSpeed = 30f; // degrees / second
         _markerMovementSpeed = 0.5f; // world units / second
 
         _marker = new(_markerPosition, Quaternion.identity, 0.1f);
-
-        for (int i = 0; i < 40; i++)
-        {
-            _markerPosition += Vector3.up * 0.01f;
-            _marker.MarkTo(_markerPosition, Quaternion.identity, 0.1f);
-        }
     }
 
     void Update()
     {
-        // _markerPosition += _markerDirection * _markerMovementSpeed * Time.deltaTime;
-        // Quaternion rotation = Quaternion.RotateTowards(Quaternion.identity, _markerDirectionDrift, _markerMaxTurnSpeed * Time.deltaTime);
-        // _markerDirection = rotation * _markerDirection;
-        // _marker.MarkTo(_markerPosition, Quaternion.identity, 0.1f);
+        _markerPosition += _markerDirection * _markerMovementSpeed * Time.deltaTime;
+        Quaternion rotation = Quaternion.RotateTowards(Quaternion.identity, _markerDirectionDrift, _markerMaxTurnSpeed * Time.deltaTime);
+        _markerDirection = rotation * _markerDirection;
+        _marker.MarkTo(_markerPosition, Quaternion.identity, 0.1f);
 
         _marker.Render(_sdfVolumeTexture);
     }

@@ -17,7 +17,7 @@ public class SdfVolumeTextureUtils
         return texture;
     }
 
-    private static void UpdateSdf(Texture3D sdfVolumeTexture, Func<Vector3, float, float> distanceFunc)
+    private static void UpdateSdf(Texture3D sdfVolumeTexture, Func<Vector3, float, (bool, float)> distanceFunc)
     {
         NativeArray<byte> data = sdfVolumeTexture.GetPixelData<byte>(0);
 
@@ -37,7 +37,10 @@ public class SdfVolumeTextureUtils
                         z / (sdfVolumeTexture.depth - 1.0f));
 
                     float oldDistance = ByteToDistance(data[x + yOffset + zOffset]);
-                    data[x + yOffset + zOffset] = DistanceToByte(distanceFunc(samplePosition, oldDistance));
+                    (bool shouldWrite, float newDistance) = distanceFunc(samplePosition, oldDistance);
+                    if (shouldWrite) {
+                        data[x + yOffset + zOffset] = DistanceToByte(newDistance);
+                    }
                 }
             }
         }
@@ -49,7 +52,7 @@ public class SdfVolumeTextureUtils
     {
         UpdateSdf(sdfVolumeTexture, (samplePosition, oldDistance) =>
         {
-            return initDistance;
+            return (true, initDistance);
         });
     }
 
@@ -74,7 +77,7 @@ public class SdfVolumeTextureUtils
             float objectSpaceDistance = shapeDistanceFunction(samplePositionInObjectSpace);
             float newDistance = MinimumObjectToWorldScaleFactor(objectTrs) * objectSpaceDistance;
             // return SmoothMinCircular(newDistance, oldDistance, 0.01f);
-            return Mathf.Min(newDistance, oldDistance);
+            return (newDistance < oldDistance, newDistance);
         });
     }
 
