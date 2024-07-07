@@ -41,7 +41,7 @@ namespace SDF
             Vector3 max = Vector3.Scale(bounds.max, textureSize);
 
             // assumes cubic sdf volume texture
-            int minUpdateHalfSize = (int)(textureSize.x * 0.025f);
+            int minUpdateHalfSize = Mathf.CeilToInt(textureSize.x * 0.025f);
 
             for (int z = Max(0, FloorToInt(min.z) - minUpdateHalfSize); z < Min(textureSize.z, CeilToInt(max.z) + minUpdateHalfSize); z++)
             {
