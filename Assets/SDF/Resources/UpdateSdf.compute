@@ -5,8 +5,13 @@
 // with cs.SetTexture
 RWTexture3D<unorm float> SdfVolumeTexture;
 
+float sphereDistance(float3 samplePoint, float radius)
+{
+    return length(samplePoint) - radius;
+}
+
 [numthreads(8,8,8)]
 void Clear (uint3 id : SV_DispatchThreadID)
 {
-    SdfVolumeTexture[id.xyz] = 1;
+    SdfVolumeTexture[id.xyz] = sphereDistance((id.xyz / 63.0) - 0.5, 0.45) * 0.5 + 0.5;
 }
