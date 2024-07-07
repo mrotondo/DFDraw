@@ -230,7 +230,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dfMaterial: {fileID: 2100000, guid: 167a7520116804f5aa339ef655419281, type: 2}
   DistanceThreshold: 0.05
-  MaxSteps: 20
+  MaxStepLength: 0.01
+  MaxSteps: 200
   MaxMarchLength: 3
 --- !u!114 &963194230
 MonoBehaviour:

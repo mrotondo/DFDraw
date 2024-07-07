@@ -32,13 +32,15 @@ namespace SDF
             Vector3 min = Vector3.Scale(bounds.min, textureSize);
             Vector3 max = Vector3.Scale(bounds.max, textureSize);
 
-            for (int z = Max(0, FloorToInt(min.z)); z < Min(textureSize.z, CeilToInt(max.z)); z++)
+            int minUpdateHalfSize = 2;
+
+            for (int z = Max(0, FloorToInt(min.z) - minUpdateHalfSize); z < Min(textureSize.z, CeilToInt(max.z) + minUpdateHalfSize); z++)
             {
                 int zOffset = z * sdfVolumeTexture.height * sdfVolumeTexture.width;
-                for (int y = Max(0, FloorToInt(min.y)); y < Min(textureSize.y, CeilToInt(max.y)); y++)
+                for (int y = Max(0, FloorToInt(min.y) - minUpdateHalfSize); y < Min(textureSize.y, CeilToInt(max.y) + minUpdateHalfSize); y++)
                 {
                     int yOffset = y * sdfVolumeTexture.width;
-                    for (int x = Max(0, FloorToInt(min.x)); x < Min(textureSize.x, CeilToInt(max.x)); x++)
+                    for (int x = Max(0, FloorToInt(min.x) - minUpdateHalfSize); x < Min(textureSize.x, CeilToInt(max.x) + minUpdateHalfSize); x++)
                     {
                         Vector3 samplePosition = new(
                             x / (sdfVolumeTexture.width - 1.0f),
@@ -61,9 +63,7 @@ namespace SDF
         public static void UpdateSdfStartingAt(
             Texture3D sdfVolumeTexture, Vector3 centroid, float approximateBoundingRadius, DistanceFunc distanceFunc)
         {
-            // TODO: This won't work until we also change the raymarcher to step forward through "cells" of the sdf volume texture
-            // Thus the * 800 nonsense
-            UpdateSdf(sdfVolumeTexture, new(centroid, Vector3.one * (approximateBoundingRadius * 800f)), distanceFunc);
+            UpdateSdf(sdfVolumeTexture, new(centroid, Vector3.one * approximateBoundingRadius), distanceFunc);
         }
 
         public static void UpdateEntireSdf(Texture3D sdfVolumeTexture, DistanceFunc distanceFunc)

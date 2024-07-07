@@ -70,6 +70,7 @@ Shader "Unlit/DFDraw"
             float4 _SdfVolumeTexture_ST;
 
             float _DistanceThreshold;
+            float _MaxStepLength;
             int _MaxSteps;
             float _MaxMarchLength;
 
@@ -182,10 +183,11 @@ Shader "Unlit/DFDraw"
                 int steps = 0;
                 float3 samplePoint = pointOnRay(ray, marchLength);
                 float distance = volumeTextureDistance(samplePoint, volumeTexture);
+                [loop]
                 while (abs(distance) > _DistanceThreshold
-                       && steps < _MaxSteps && steps < 100 // adding to convince metal that this can be unrolled
+                       && steps < _MaxSteps
                        && marchLength < _MaxMarchLength) {
-                    marchLength += abs(distance);
+                    marchLength += min(_MaxStepLength, abs(distance));
                     samplePoint = pointOnRay(ray, marchLength);
                     distance = volumeTextureDistance(samplePoint, volumeTexture);
                     steps++;
