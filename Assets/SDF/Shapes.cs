@@ -8,14 +8,11 @@ namespace SDF
     {
         // Warning! Do not use non-uniform scale vectors: At least according to Inigo, they can't generate correct SDF:
         // https://iquilezles.org/articles/distfunctions/#:~:text=with%20uniform%20scaling.-,Non%20uniform%20scaling,-is%20not%20possible
-        private static void BlitShapeToSdfVolumeTexture(
-            Texture3D sdfVolumeTexture,
-            Matrix4x4 objectTrs,
-            Func<Vector3, float> shapeDistanceFunction)
+        private static void BlitShape(VolumeTexture sdfVolumeTexture, Matrix4x4 objectTrs, Func<Vector3, float> shapeDistanceFunction)
         {
             Vector3 centroid = objectTrs * new Vector4(0, 0, 0, 1);
             float approximateBoundingRadius = (objectTrs * new Vector4(1, 0, 0, 0)).magnitude;
-            VolumeTexture.UpdateSdfStartingAt(sdfVolumeTexture, centroid, approximateBoundingRadius, (samplePosition, oldDistance) =>
+            sdfVolumeTexture.UpdateArea(centroid, approximateBoundingRadius, (samplePosition, oldDistance) =>
             {
                 Vector3 samplePositionInObjectSpace = WorldToObjectSpace(samplePosition, objectTrs);
                 float objectSpaceDistance = shapeDistanceFunction(samplePositionInObjectSpace);
@@ -47,14 +44,14 @@ namespace SDF
             return (objectTrs * Vector3.right).magnitude;
         }
 
-        public static void BlitSphereToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 trs)
+        public static void BlitSphereToSdfVolumeTexture(VolumeTexture sdfVolumeTexture, Matrix4x4 trs)
         {
-            BlitShapeToSdfVolumeTexture(sdfVolumeTexture, trs, UnitSphereDistance);
+            BlitShape(sdfVolumeTexture, trs, UnitSphereDistance);
         }
 
-        public static void BlitBoxToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 trs)
+        public static void BlitBoxToSdfVolumeTexture(VolumeTexture sdfVolumeTexture, Matrix4x4 trs)
         {
-            BlitShapeToSdfVolumeTexture(sdfVolumeTexture, trs, UnitCubeDistance);
+            BlitShape(sdfVolumeTexture, trs, UnitCubeDistance);
         }
 
         private static float UnitSphereDistance(Vector3 samplePoint)

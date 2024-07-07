@@ -1,7 +1,5 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using SDF;
 using UnityEngine;
 
 public class Marker
@@ -53,11 +51,11 @@ public class Marker
         _scale = newScale;
     }
 
-    public void Render(Texture3D sdfVolumetexture)
+    public void Render(VolumeTexture sdfVolumetexture)
     {
         foreach (var mark in _marks)
         {
-            SDF.Shapes.BlitSphereToSdfVolumeTexture(sdfVolumetexture, mark);
+            Shapes.BlitSphereToSdfVolumeTexture(sdfVolumetexture, mark);
         }
         _marks.Clear();
     }

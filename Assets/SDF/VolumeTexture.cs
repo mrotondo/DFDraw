@@ -6,33 +6,40 @@ using static UnityEngine.Mathf;
 
 namespace SDF
 {
-    public static class VolumeTexture
+    public class VolumeTexture
     {
-        public static Texture3D CreateCubeSdfVolumeTexture(int size)
+        private Texture3D _sdfVolumeTexture;
+
+        public VolumeTexture(int size)
         {
-            // var texture = new RenderTexture(size, size, 0, RenderTextureFormat.R8);
-            // texture.enableRandomWrite = true;
-            // texture.dimension = TextureDimension.Tex3D;
-            // texture.volumeDepth = size;
+            // var texture = new RenderTexture(size, size, 0, RenderTextureFormat.R8)
+            // {
+            //     enableRandomWrite = true,
+            //     dimension = TextureDimension.Tex3D,
+            //     volumeDepth = size,
+            //     wrapMode = TextureWrapMode.Clamp,
+            //     filterMode = FilterMode.Bilinear
+            // };
             // texture.Create();
 
-
-            var texture = new Texture3D(size, size, size, TextureFormat.Alpha8, false, true)
+            _sdfVolumeTexture = new Texture3D(size, size, size, TextureFormat.Alpha8, false, true)
             {
                 filterMode = FilterMode.Bilinear,
                 wrapMode = TextureWrapMode.Clamp
             };
+            Clear(1.0f);
+        }
 
-            InitSdfVolumeTexture(texture, 1.0f);
-
-            return texture;
+        public void ConfigureRenderer(DFRenderer renderer)
+        {
+            renderer.SdfVolumeTexture = _sdfVolumeTexture;
         }
 
         public delegate (bool, float) DistanceFunc(Vector3 samplePosition, float oldDistance);
 
         // TODO: Put this in a compute shader and see what happens
         // This currently relies on the fact we're a unit cube with our lower front left at 0,0,0
-        private static void UpdateSdf(Texture3D sdfVolumeTexture, Bounds bounds, DistanceFunc distanceFunc)
+        private static void Update(Texture3D sdfVolumeTexture, Bounds bounds, DistanceFunc distanceFunc)
         {
             NativeArray<byte> data = sdfVolumeTexture.GetPixelData<byte>(0);
 
@@ -69,22 +76,21 @@ namespace SDF
             sdfVolumeTexture.Apply();
         }
 
-        public static void UpdateSdfStartingAt(
-            Texture3D sdfVolumeTexture, Vector3 centroid, float approximateBoundingRadius, DistanceFunc distanceFunc)
+        public void UpdateArea(Vector3 centroid, float approximateBoundingRadius, DistanceFunc distanceFunc)
         {
-            UpdateSdf(sdfVolumeTexture, new(centroid, Vector3.one * approximateBoundingRadius), distanceFunc);
+            Update(_sdfVolumeTexture, new(centroid, Vector3.one * approximateBoundingRadius), distanceFunc);
         }
 
-        public static void UpdateEntireSdf(Texture3D sdfVolumeTexture, DistanceFunc distanceFunc)
+        public void UpdateEntire(DistanceFunc distanceFunc)
         {
-            UpdateSdf(sdfVolumeTexture, new(Vector3.one * 0.5f, Vector3.one), distanceFunc);
+            Update(_sdfVolumeTexture, new(Vector3.one * 0.5f, Vector3.one), distanceFunc);
         }
 
-        private static void InitSdfVolumeTexture(Texture3D sdfVolumeTexture, float initDistance)
+        private void Clear(float clearDistance)
         {
-            UpdateEntireSdf(sdfVolumeTexture, (samplePosition, oldDistance) =>
+            UpdateEntire((samplePosition, oldDistance) =>
             {
-                return (true, initDistance);
+                return (true, clearDistance);
             });
         }
 

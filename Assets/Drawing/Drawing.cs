@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using SDF;
 using UnityEngine;
 using UnityEngine.Experimental.AI;
 
@@ -7,7 +8,7 @@ public class Drawing : MonoBehaviour
 {
     public int SdfVolumeSideLength;
 
-    private Texture3D _sdfVolumeTexture;
+    private VolumeTexture _sdfVolumeTexture;
     private Marker _marker;
 
     public Vector3 MarkerPosition = new(0.25f, 0.0f, 0.5f);
@@ -24,9 +25,8 @@ public class Drawing : MonoBehaviour
 
     void Start()
     {
-        _sdfVolumeTexture = SDF.VolumeTexture.CreateCubeSdfVolumeTexture(SdfVolumeSideLength);
-        var renderer = GetComponent<DFRenderer>();
-        renderer.SdfVolumeTexture = _sdfVolumeTexture;
+        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength);
+        _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
         _marker = new(MarkerPosition, Quaternion.identity, MarkerRadius);
     }
