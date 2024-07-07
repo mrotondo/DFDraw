@@ -33,7 +33,7 @@ public class Drawing : MonoBehaviour
 
     void Update()
     {
-        if (MarkerRadius > 0.001f)
+        if (MarkerRadius > 0.0001f)
         {
             MarkerPosition += MarkerDirection * MarkerMovementSpeed * Time.deltaTime;
             Quaternion rotation = Quaternion.RotateTowards(Quaternion.identity, MarkerDirectionDrift, MarkerMaxTurnSpeed * Time.deltaTime);
