@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class Drawing : MonoBehaviour
 {
-    public int SdfVolumeSideLength;
+    public uint SdfVolumeSideLength;
 
     private VolumeTexture _sdfVolumeTexture;
     private Marker _marker;

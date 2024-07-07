@@ -9,7 +9,7 @@ public class DFRenderer : MonoBehaviour
     public int MaxSteps;
     public float MaxMarchLength;
 
-    public Texture3D SdfVolumeTexture
+    public RenderTexture SdfVolumeTexture
     {
         set => dfMaterial.SetTexture("_SdfVolumeTexture", value);
     }

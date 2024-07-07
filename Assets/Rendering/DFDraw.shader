@@ -162,7 +162,7 @@ Shader "Unlit/DFDraw"
             // needs to eventually handle positions that aren't in [(0,0,0), (1,1,1)]
             float volumeTextureDistance(float3 samplePoint, sampler3D volumeTexture)
             {
-                return alphaToDistance(tex3D(volumeTexture, samplePoint).a);
+                return alphaToDistance(tex3D(volumeTexture, samplePoint).r);
             }
 
             float3 volumeTextureNormal(float3 samplePoint, sampler3D volumeTexture)

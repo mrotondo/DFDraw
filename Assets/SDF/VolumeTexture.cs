@@ -1,30 +1,39 @@
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 using static UnityEngine.Mathf;
 
 namespace SDF
 {
     public class VolumeTexture
     {
-        private readonly Texture3D _sdfVolumeTexture;
+        private readonly uint _size;
+        private readonly RenderTexture _sdfVolumeTexture;
+        private readonly ComputeShader _updateSdfShader;
 
-        public VolumeTexture(int size)
+        public VolumeTexture(uint size)
         {
-            // var texture = new RenderTexture(size, size, 0, RenderTextureFormat.R8)
-            // {
-            //     enableRandomWrite = true,
-            //     dimension = TextureDimension.Tex3D,
-            //     volumeDepth = size,
-            //     wrapMode = TextureWrapMode.Clamp,
-            //     filterMode = FilterMode.Bilinear
-            // };
-            // texture.Create();
+            _size = size;
 
-            _sdfVolumeTexture = new Texture3D(size, size, size, TextureFormat.Alpha8, false, true)
+            _sdfVolumeTexture = new RenderTexture((int)size, (int)size, 0, RenderTextureFormat.R8)
             {
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp
+                enableRandomWrite = true,
+                dimension = TextureDimension.Tex3D,
+                volumeDepth = (int)size,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
             };
+            _sdfVolumeTexture.Create();
+
+            _updateSdfShader = StaticResourcesLoader.UpdateSdfShader;
+            int clearKernel = _updateSdfShader.FindKernel("Clear");
+            _updateSdfShader.SetTexture(clearKernel, "SdfVolumeTexture", _sdfVolumeTexture);
+
+            // _sdfVolumeTexture = new Texture3D(size, size, size, TextureFormat.Alpha8, false, true)
+            // {
+            //     filterMode = FilterMode.Bilinear,
+            //     wrapMode = TextureWrapMode.Clamp
+            // };
             Clear(1.0f);
         }
 
@@ -76,20 +85,19 @@ namespace SDF
 
         public void UpdateArea(Vector3 centroid, float approximateBoundingRadius, DistanceFunc distanceFunc)
         {
-            Update(_sdfVolumeTexture, new(centroid, Vector3.one * approximateBoundingRadius), distanceFunc);
+            // Update(_sdfVolumeTexture, new(centroid, Vector3.one * approximateBoundingRadius), distanceFunc);
         }
 
         public void UpdateEntire(DistanceFunc distanceFunc)
         {
-            Update(_sdfVolumeTexture, new(Vector3.one * 0.5f, Vector3.one), distanceFunc);
+            // Update(_sdfVolumeTexture, new(Vector3.one * 0.5f, Vector3.one), distanceFunc);
         }
 
         private void Clear(float clearDistance)
         {
-            UpdateEntire((samplePosition, oldDistance) =>
-            {
-                return (true, clearDistance);
-            });
+            int clearKernel = _updateSdfShader.FindKernel("Clear");
+            _updateSdfShader.GetKernelThreadGroupSizes(clearKernel, out uint x, out uint y, out uint z);
+            _updateSdfShader.Dispatch(clearKernel, (int)(_size/x), (int)(_size/y), (int)(_size/z));
         }
 
         private static byte DistanceToByte(float distance)
