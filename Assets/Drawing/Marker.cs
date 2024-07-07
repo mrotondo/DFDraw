@@ -8,7 +8,7 @@ public class Marker
     private Quaternion _orientation;
     private float _scale;
 
-    private readonly List<Matrix4x4> _marks;
+    private readonly List<Mark> _marks;
     private readonly float _translationMarkThreshold = 0.03f;  // units: world space distance
     private readonly float _rotationMarkThreshold = 5f;  // units: degrees
     private readonly float _scaleMarkThreshold = 0.2f;  // units: ratio
@@ -19,9 +19,9 @@ public class Marker
         _orientation = initialOrientation;
         _scale = Mathf.Max(initialScale, Mathf.Epsilon);
 
-        _marks = new List<Matrix4x4>
+        _marks = new List<Mark>
         {
-            Matrix4x4.TRS(_position, _orientation, Vector3.one * _scale)
+            new(_position, _orientation, _scale)
         };
     }
 
@@ -43,7 +43,7 @@ public class Marker
             Vector3 markPosition = Vector3.Lerp(_position, newPosition, t);
             Quaternion markOrientation = Quaternion.Slerp(_orientation, newOrientation, t);
             float markScale = Mathf.Lerp(_scale, newScale, t);  // Won't generate linear size changes, but might be fine
-            _marks.Add(Matrix4x4.TRS(markPosition, markOrientation, Vector3.one * markScale));
+            _marks.Add(new(markPosition, markOrientation, markScale));
         }
 
         _position = newPosition;
@@ -55,8 +55,22 @@ public class Marker
     {
         foreach (var mark in _marks)
         {
-            Shapes.BlitSphereToSdfVolumeTexture(sdfVolumetexture, mark);
+            sdfVolumetexture.BlitSphere(mark.Position, mark.Scale);
         }
         _marks.Clear();
+    }
+
+    private class Mark
+    {
+        public Vector3 Position;
+        public Quaternion Orientation;
+        public float Scale;
+
+        public Mark(Vector3 position, Quaternion orientation, float scale)
+        {
+            Position = position;
+            Orientation = orientation;
+            Scale = scale;
+        }
     }
 }

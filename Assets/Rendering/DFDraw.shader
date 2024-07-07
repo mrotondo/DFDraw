@@ -70,12 +70,8 @@ Shader "Unlit/DFDraw"
             float4 _SdfVolumeTexture_ST;
 
             float _DistanceThreshold;
-            float _MaxStepLength;
             int _MaxSteps;
             float _MaxMarchLength;
-
-            float4x4 _BoxInverseTransform;
-            float4x4 _BoxTransform;
 
             Ray fragmentRay(float verticalFieldOfView,
                 float3 camPosition,
@@ -125,36 +121,6 @@ Shader "Unlit/DFDraw"
                 return ray.origin + distance * ray.direction;
             }
 
-            float sphereDistance(float3 samplePoint, float radius)
-            {
-                return length(samplePoint) - radius;
-            }
-
-            float boxDistance(float3 samplePoint, float3 size)
-            {
-                return length(max(abs(samplePoint) - size, 0.0));
-            }
-
-            float3 transform(float3 samplePoint, float4x4 inverseTransform)
-            {
-                float4 heterogenousSamplePoint = float4(samplePoint.x, samplePoint.y, samplePoint.z, 1.0);
-                return mul(inverseTransform, heterogenousSamplePoint).xyz;
-            }
-
-            float safeScaleFactor(float4x4 transform)
-            {
-                float4 x = mul(transform, float4(1, 0, 0, 0));
-                float4 y = mul(transform, float4(0, 1, 0, 0));
-                float4 z = mul(transform, float4(0, 0, 1, 0));
-                return min(length(x), min(length(y), length(z)));
-            }
-
-            float boxSceneDistance(float3 samplePoint)
-            {
-                float unscaledDistance = boxDistance(transform(samplePoint, _BoxInverseTransform), 0.5);
-                return unscaledDistance * safeScaleFactor(_BoxTransform);
-            }
-
             float alphaToDistance(float alpha) {
                 return alpha * 2 - 1;
             }
@@ -187,7 +153,7 @@ Shader "Unlit/DFDraw"
                 while (abs(distance) > _DistanceThreshold
                        && steps < _MaxSteps
                        && marchLength < _MaxMarchLength) {
-                    marchLength += min(_MaxStepLength, abs(distance));
+                    marchLength += abs(distance);
                     samplePoint = pointOnRay(ray, marchLength);
                     distance = volumeTextureDistance(samplePoint, volumeTexture);
                     steps++;
