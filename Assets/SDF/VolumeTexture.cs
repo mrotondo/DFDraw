@@ -1,6 +1,7 @@
 using System;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 using static UnityEngine.Mathf;
 
 namespace SDF
@@ -9,6 +10,13 @@ namespace SDF
     {
         public static Texture3D CreateCubeSdfVolumeTexture(int size)
         {
+            // var texture = new RenderTexture(size, size, 0, RenderTextureFormat.R8);
+            // texture.enableRandomWrite = true;
+            // texture.dimension = TextureDimension.Tex3D;
+            // texture.volumeDepth = size;
+            // texture.Create();
+
+
             var texture = new Texture3D(size, size, size, TextureFormat.Alpha8, false, true)
             {
                 filterMode = FilterMode.Bilinear,
@@ -22,7 +30,7 @@ namespace SDF
 
         public delegate (bool, float) DistanceFunc(Vector3 samplePosition, float oldDistance);
 
-        // TODO: Naive implementation! Could be improved by breaking the texture up into cells and only updating cells that overlap with the sphere
+        // TODO: Put this in a compute shader and see what happens
         // This currently relies on the fact we're a unit cube with our lower front left at 0,0,0
         private static void UpdateSdf(Texture3D sdfVolumeTexture, Bounds bounds, DistanceFunc distanceFunc)
         {
@@ -33,7 +41,7 @@ namespace SDF
             Vector3 max = Vector3.Scale(bounds.max, textureSize);
 
             // assumes cubic sdf volume texture
-            int minUpdateHalfSize = (int)(textureSize.x * 0.07f);
+            int minUpdateHalfSize = (int)(textureSize.x * 0.025f);
 
             for (int z = Max(0, FloorToInt(min.z) - minUpdateHalfSize); z < Min(textureSize.z, CeilToInt(max.z) + minUpdateHalfSize); z++)
             {

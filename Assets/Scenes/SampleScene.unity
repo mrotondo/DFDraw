@@ -229,7 +229,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dfMaterial: {fileID: 2100000, guid: 167a7520116804f5aa339ef655419281, type: 2}
-  DistanceThreshold: 0.05
+  DistanceThreshold: 0.005
   MaxStepLength: 0.01
   MaxSteps: 200
   MaxMarchLength: 3
@@ -250,10 +250,10 @@ MonoBehaviour:
   MarkerMovementSpeed: 0.6
   MarkerDirection: {x: -0.5, y: 0.5, z: 0}
   MarkerDirectionDrift: {x: -0, y: -0, z: -0.70710677, w: 0.70710677}
-  MarkerMaxTurnSpeed: 40
+  MarkerMaxTurnSpeed: 45
   MarkerMaxTurnSpeedGrowthRate: 1.2
-  MarkerRadius: 0.1
-  MarkerRadiusGrowthRate: 0.2
+  MarkerRadius: 0.2
+  MarkerRadiusGrowthRate: 0.8
 --- !u!1 &1915091893
 GameObject:
   m_ObjectHideFlags: 0

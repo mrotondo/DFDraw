@@ -36,7 +36,7 @@ public class Marker
 
         newScale = Mathf.Max(newScale, Mathf.Epsilon);
         float scaleRatio = Mathf.Min(_scale, newScale) / Mathf.Max(_scale, newScale);
-        int numScaleMarks = Mathf.CeilToInt(Quaternion.Angle(_orientation, newOrientation) / _scaleMarkThreshold);
+        int numScaleMarks = Mathf.CeilToInt(scaleRatio / _scaleMarkThreshold);
 
         int numMarks = Mathf.Max(numTranslationMarks, numRotationMarks, numScaleMarks);
         for (int i = 0; i < numMarks; i++)
