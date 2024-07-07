@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
   - component: {fileID: 963194230}
+  - component: {fileID: 963194231}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -244,15 +245,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0448c1e9ebd7448dbaf2f6a5d2779a0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SdfVolumeSideLength: 256
-  MarkerPosition: {x: 0.3, y: 0, z: 0.5}
+  SdfVolumeSideLength: 128
+  MarkerPosition: {x: 0.3, y: 0, z: 0.8}
   MarkerMovementSpeed: 0.6
   MarkerDirection: {x: -0.5, y: 0.5, z: 0}
-  MarkerDirectionDrift: {x: -0, y: -0, z: -0.70710677, w: 0.70710677}
+  MarkerDirectionDrift: {x: -0, y: 0.2, z: -0.8, w: 0.70710677}
   MarkerMaxTurnSpeed: 45
   MarkerMaxTurnSpeedGrowthRate: 1.2
   MarkerRadius: 0.1
   MarkerRadiusGrowthRate: 0.8
+--- !u!114 &963194231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12725753ae55b4b8da0425ee729a7b9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SdfVolumeSideLength: 128
+  MarkerPosition: {x: 0.25, y: 0, z: 1.5}
+  MarkerMovementSpeed: 0.5
+  MarkerDirection: {x: -0.5, y: 0.5, z: 0}
+  MarkerDirectionDrift: {x: -0, y: -0, z: -0.70710677, w: 0.70710677}
+  MarkerMaxTurnSpeed: 45
+  MarkerMaxTurnSpeedGrowthRate: 1.5
+  MarkerRadius: 0.1
+  MarkerRadiusGrowthRate: 0.5
 --- !u!1 &1915091893
 GameObject:
   m_ObjectHideFlags: 0

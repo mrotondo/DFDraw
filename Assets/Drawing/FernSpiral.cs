@@ -1,7 +1,7 @@
 using SDF;
 using UnityEngine;
 
-public class Drawing : MonoBehaviour
+public class FernSpiral : MonoBehaviour
 {
     public uint SdfVolumeSideLength;
 
@@ -9,16 +9,13 @@ public class Drawing : MonoBehaviour
     private Marker _marker;
 
     public Vector3 MarkerPosition = new(0.25f, 0.0f, 0.5f);
-
     public float MarkerMovementSpeed = 0.5f; // world units / second
     public Vector3 MarkerDirection = new(-0.5f, 0.5f, 0f);
     public Quaternion MarkerDirectionDrift = Quaternion.AngleAxis(-90, Vector3.forward);
     public float MarkerMaxTurnSpeed = 45f; // degrees / second
     public float MarkerMaxTurnSpeedGrowthRate = 1.0003f; // growth rate / second
-
     public float MarkerRadius = 0.1f;
     public float MarkerRadiusGrowthRate = 0.999f; // growth rate / second
-
 
     void Start()
     {

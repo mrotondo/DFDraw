@@ -55,15 +55,5 @@ namespace SDF
             _updateSdfShader.GetKernelThreadGroupSizes(clearKernel, out uint x, out uint y, out uint z);
             _updateSdfShader.Dispatch(clearKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
         }
-
-        private static byte DistanceToByte(float distance)
-        {
-            return (byte)((distance * 0.5f + 0.5f) * 255); // [-1, 1] => [0, 255]
-        }
-
-        private static float ByteToDistance(byte alpha)
-        {
-            return (alpha / 255.0f) * 2 - 1; // [0, 255] => [-1, 1]
-        }
     }
 }
