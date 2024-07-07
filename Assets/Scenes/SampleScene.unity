@@ -245,7 +245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0448c1e9ebd7448dbaf2f6a5d2779a0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SdfVolumeSideLength: 30
+  SdfVolumeSideLength: 100
   MarkerPosition: {x: 0.3, y: 0, z: 0.5}
   MarkerMovementSpeed: 0.6
   MarkerDirection: {x: -0.5, y: 0.5, z: 0}
