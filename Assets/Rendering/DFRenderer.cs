@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DFRenderer : MonoBehaviour
@@ -12,7 +9,8 @@ public class DFRenderer : MonoBehaviour
     public int MaxSteps;
     public float MaxMarchLength;
 
-    public Texture3D SdfVolumeTexture {
+    public Texture3D SdfVolumeTexture
+    {
         set => dfMaterial.SetTexture("_SdfVolumeTexture", value);
     }
 

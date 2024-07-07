@@ -1,14 +1,12 @@
-using System;
 using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Rendering;
 using static UnityEngine.Mathf;
 
 namespace SDF
 {
     public class VolumeTexture
     {
-        private Texture3D _sdfVolumeTexture;
+        private readonly Texture3D _sdfVolumeTexture;
 
         public VolumeTexture(int size)
         {

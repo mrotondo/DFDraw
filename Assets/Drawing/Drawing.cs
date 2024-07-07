@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using SDF;
 using UnityEngine;
-using UnityEngine.Experimental.AI;
 
 public class Drawing : MonoBehaviour
 {

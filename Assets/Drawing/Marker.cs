@@ -8,10 +8,10 @@ public class Marker
     private Quaternion _orientation;
     private float _scale;
 
-    private List<Matrix4x4> _marks;
-    private float _translationMarkThreshold = 0.03f;  // units: world space distance
-    private float _rotationMarkThreshold = 5f;  // units: degrees
-    private float _scaleMarkThreshold = 0.2f;  // units: ratio
+    private readonly List<Matrix4x4> _marks;
+    private readonly float _translationMarkThreshold = 0.03f;  // units: world space distance
+    private readonly float _rotationMarkThreshold = 5f;  // units: degrees
+    private readonly float _scaleMarkThreshold = 0.2f;  // units: ratio
 
     public Marker(Vector3 initialPosition, Quaternion initialOrientation, float initialScale)
     {
