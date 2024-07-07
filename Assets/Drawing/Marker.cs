@@ -27,6 +27,7 @@ public class Marker
         };
     }
 
+    // TODO: Only update after cumulative movement/rotation/scale that passes a threshold
     public void MarkTo(Vector3 newPosition, Quaternion newOrientation, float newScale)
     {
         int numTranslationMarks = Mathf.CeilToInt(Vector3.Distance(_position, newPosition) / _translationMarkThreshold);
@@ -56,7 +57,7 @@ public class Marker
     {
         foreach (var mark in _marks)
         {
-            SdfVolumeTextureUtils.BlitSphereToSdfVolumeTexture(sdfVolumetexture, mark);
+            SDF.Shapes.BlitSphereToSdfVolumeTexture(sdfVolumetexture, mark);
         }
         _marks.Clear();
     }

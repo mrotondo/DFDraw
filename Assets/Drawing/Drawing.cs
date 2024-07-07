@@ -24,7 +24,7 @@ public class Drawing : MonoBehaviour
 
     void Start()
     {
-        _sdfVolumeTexture = SdfVolumeTextureUtils.CreateCubeSdfVolumeTexture(SdfVolumeSideLength);
+        _sdfVolumeTexture = SDF.VolumeTexture.CreateCubeSdfVolumeTexture(SdfVolumeSideLength);
         var renderer = GetComponent<DFRenderer>();
         renderer.SdfVolumeTexture = _sdfVolumeTexture;
 
