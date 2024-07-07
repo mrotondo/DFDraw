@@ -1,6 +1,7 @@
 using System;
 using Unity.Collections;
 using UnityEngine;
+using static UnityEngine.Mathf;
 
 namespace SDF
 {
@@ -27,13 +28,17 @@ namespace SDF
         {
             NativeArray<byte> data = sdfVolumeTexture.GetPixelData<byte>(0);
 
-            for (int z = 0; z < sdfVolumeTexture.depth; z++)
+            Vector3Int textureSize = new(sdfVolumeTexture.width, sdfVolumeTexture.height, sdfVolumeTexture.depth);
+            Vector3 min = Vector3.Scale(bounds.min, textureSize);
+            Vector3 max = Vector3.Scale(bounds.max, textureSize);
+
+            for (int z = Max(0, FloorToInt(min.z)); z < Min(textureSize.z, CeilToInt(max.z)); z++)
             {
                 int zOffset = z * sdfVolumeTexture.height * sdfVolumeTexture.width;
-                for (int y = 0; y < sdfVolumeTexture.height; y++)
+                for (int y = Max(0, FloorToInt(min.y)); y < Min(textureSize.y, CeilToInt(max.y)); y++)
                 {
                     int yOffset = y * sdfVolumeTexture.width;
-                    for (int x = 0; x < sdfVolumeTexture.width; x++)
+                    for (int x = Max(0, FloorToInt(min.x)); x < Min(textureSize.x, CeilToInt(max.x)); x++)
                     {
                         Vector3 samplePosition = new(
                             x / (sdfVolumeTexture.width - 1.0f),
@@ -56,13 +61,14 @@ namespace SDF
         public static void UpdateSdfStartingAt(
             Texture3D sdfVolumeTexture, Vector3 centroid, float approximateBoundingRadius, DistanceFunc distanceFunc)
         {
-            Debug.Log("Got approximate bounding radius: " + approximateBoundingRadius);
-            UpdateSdf(sdfVolumeTexture, new(centroid, Vector3.one * approximateBoundingRadius), distanceFunc);
+            // TODO: This won't work until we also change the raymarcher to step forward through "cells" of the sdf volume texture
+            // Thus the * 800 nonsense
+            UpdateSdf(sdfVolumeTexture, new(centroid, Vector3.one * (approximateBoundingRadius * 800f)), distanceFunc);
         }
 
         public static void UpdateEntireSdf(Texture3D sdfVolumeTexture, DistanceFunc distanceFunc)
         {
-            UpdateSdf(sdfVolumeTexture, new(Vector3.one * 0.5f, Vector3.one * 0.5f), distanceFunc);
+            UpdateSdf(sdfVolumeTexture, new(Vector3.one * 0.5f, Vector3.one), distanceFunc);
         }
 
         private static void InitSdfVolumeTexture(Texture3D sdfVolumeTexture, float initDistance)
