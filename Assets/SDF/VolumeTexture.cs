@@ -19,8 +19,11 @@ namespace SDF
             return texture;
         }
 
+        public delegate (bool, float) DistanceFunc(Vector3 samplePosition, float oldDistance);
+
         // TODO: Naive implementation! Could be improved by breaking the texture up into cells and only updating cells that overlap with the sphere
-        public static void UpdateSdf(Texture3D sdfVolumeTexture, Func<Vector3, float, (bool, float)> distanceFunc)
+        // This currently relies on the fact we're a unit cube with our lower front left at 0,0,0
+        private static void UpdateSdf(Texture3D sdfVolumeTexture, Bounds bounds, DistanceFunc distanceFunc)
         {
             NativeArray<byte> data = sdfVolumeTexture.GetPixelData<byte>(0);
 
@@ -32,8 +35,6 @@ namespace SDF
                     int yOffset = y * sdfVolumeTexture.width;
                     for (int x = 0; x < sdfVolumeTexture.width; x++)
                     {
-                        // This only works because we're a unit cube with our lower front left at 0,0,0
-                        // We'll need a smarter transform later to get cell position
                         Vector3 samplePosition = new(
                             x / (sdfVolumeTexture.width - 1.0f),
                             y / (sdfVolumeTexture.height - 1.0f),
@@ -52,9 +53,21 @@ namespace SDF
             sdfVolumeTexture.Apply();
         }
 
+        public static void UpdateSdfStartingAt(
+            Texture3D sdfVolumeTexture, Vector3 centroid, float approximateBoundingRadius, DistanceFunc distanceFunc)
+        {
+            Debug.Log("Got approximate bounding radius: " + approximateBoundingRadius);
+            UpdateSdf(sdfVolumeTexture, new(centroid, Vector3.one * approximateBoundingRadius), distanceFunc);
+        }
+
+        public static void UpdateEntireSdf(Texture3D sdfVolumeTexture, DistanceFunc distanceFunc)
+        {
+            UpdateSdf(sdfVolumeTexture, new(Vector3.one * 0.5f, Vector3.one * 0.5f), distanceFunc);
+        }
+
         private static void InitSdfVolumeTexture(Texture3D sdfVolumeTexture, float initDistance)
         {
-            UpdateSdf(sdfVolumeTexture, (samplePosition, oldDistance) =>
+            UpdateEntireSdf(sdfVolumeTexture, (samplePosition, oldDistance) =>
             {
                 return (true, initDistance);
             });

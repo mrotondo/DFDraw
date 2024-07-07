@@ -8,9 +8,14 @@ namespace SDF
     {
         // Warning! Do not use non-uniform scale vectors: At least according to Inigo, they can't generate correct SDF:
         // https://iquilezles.org/articles/distfunctions/#:~:text=with%20uniform%20scaling.-,Non%20uniform%20scaling,-is%20not%20possible
-        private static void BlitShapeToSdfVolumeTexture(Texture3D sdfVolumeTexture, Matrix4x4 objectTrs, Func<Vector3, float> shapeDistanceFunction)
+        private static void BlitShapeToSdfVolumeTexture(
+            Texture3D sdfVolumeTexture,
+            Matrix4x4 objectTrs,
+            Func<Vector3, float> shapeDistanceFunction)
         {
-            VolumeTexture.UpdateSdf(sdfVolumeTexture, (samplePosition, oldDistance) =>
+            Vector3 centroid = objectTrs * new Vector4(0, 0, 0, 1);
+            float approximateBoundingRadius = (objectTrs * new Vector4(1, 0, 0, 0)).magnitude;
+            VolumeTexture.UpdateSdfStartingAt(sdfVolumeTexture, centroid, approximateBoundingRadius, (samplePosition, oldDistance) =>
             {
                 Vector3 samplePositionInObjectSpace = WorldToObjectSpace(samplePosition, objectTrs);
                 float objectSpaceDistance = shapeDistanceFunction(samplePositionInObjectSpace);
