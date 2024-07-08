@@ -17,6 +17,7 @@ public class Manzanita : MonoBehaviour
     public float BranchLengthChangeFactor = 0.9f; // ratio / branch
     public float BranchRadiusChangeFactor = 0.8f; // ratio / branch
     public float BranchAngleRangeChangeFactor = 0.8f; // ratio / branch
+    private System.Random _random;
     public int MaxBranchDepth = 5;
 
     private List<Branch> _growingBranches;
@@ -26,8 +27,10 @@ public class Manzanita : MonoBehaviour
         _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength);
         _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
+        _random = new System.Random();
+
         _growingBranches = new List<Branch>() {
-            new(BasePosition, GrowthRate, InitialGrowthDirection, InitialRadius, RadiusGrowthRate, BranchLength, BranchAngleRange, 0)
+            new(_sdfVolumeTexture, BasePosition, GrowthRate, InitialGrowthDirection, InitialRadius, RadiusGrowthRate, BranchLength, BranchAngleRange, 0)
         };
     }
 
@@ -35,12 +38,13 @@ public class Manzanita : MonoBehaviour
     {
         List<Branch> finishedBranches = new();
         List<Branch> newBranches = new();
+
         foreach (var branch in _growingBranches)
         {
             branch.GrowAndRender(_sdfVolumeTexture);
             if (branch.ReadyToBranch() && branch.Depth < MaxBranchDepth)
             {
-                newBranches.AddRange(branch.CreateBranches(BranchRadiusChangeFactor, BranchLengthChangeFactor, BranchAngleRangeChangeFactor, MaxBranchDepth));
+                newBranches.AddRange(branch.CreateBranches(_random, _sdfVolumeTexture, BranchRadiusChangeFactor, BranchLengthChangeFactor, BranchAngleRangeChangeFactor, MaxBranchDepth));
             }
         }
         _growingBranches.RemoveAll(branch => branch.ReadyToBranch());
@@ -61,9 +65,8 @@ public class Manzanita : MonoBehaviour
         private readonly float _branchAngleRange;
         public readonly int Depth;
         private readonly Marker _marker;
-        private readonly System.Random _random;
 
-        public Branch(Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchAngleRange, int depth)
+        public Branch(VolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchAngleRange, int depth)
         {
             _initialPosition = _position = position;
             _growthRate = growthRate;
@@ -73,8 +76,7 @@ public class Manzanita : MonoBehaviour
             _maxLength = maxLength;
             _branchAngleRange = branchAngleRange;
             Depth = depth;
-            _marker = new(position, Quaternion.identity, radius);
-            _random = new System.Random();
+            _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius);
         }
 
         private float Length()
@@ -87,11 +89,11 @@ public class Manzanita : MonoBehaviour
             return Length() > _maxLength;
         }
 
-        public List<Branch> CreateBranches(float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, int maxBranchDepth)
+        public List<Branch> CreateBranches(System.Random random, VolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, int maxBranchDepth)
         {
             List<Branch> branches = new();
             float t = (float)Depth / maxBranchDepth;
-            int numBranches = _random.Next(Mathf.FloorToInt(Mathf.Lerp(3,1,t)), Mathf.FloorToInt(Mathf.Lerp(5,2,t)));
+            int numBranches = random.Next(Mathf.FloorToInt(Mathf.Lerp(3,1,t)), Mathf.FloorToInt(Mathf.Lerp(5,2,t)));
             for (int i = 0; i < numBranches; i++)
             {
                 var circlePosition = Random.insideUnitCircle * Mathf.Tan(_branchAngleRange * Mathf.Deg2Rad);
@@ -100,6 +102,7 @@ public class Manzanita : MonoBehaviour
                 var newGrowthDirection = rotation * _growthDirection;
 
                 branches.Add(new(
+                    sdfVolumeTexture,
                     _position,
                     _growthRate,
                     newGrowthDirection,
@@ -116,8 +119,7 @@ public class Manzanita : MonoBehaviour
         {
             _position += _growthDirection * (_growthRate * Time.deltaTime);
             _radius *= 1 + (_radiusGrowthRate - 1) * Time.deltaTime;
-            _marker.MarkTo(_position, Quaternion.identity, _radius);
-            _marker.Render(sdfVolumeTexture);
+            _marker.MarkTo(sdfVolumeTexture, _position, Quaternion.identity, _radius);
         }
     }
 }

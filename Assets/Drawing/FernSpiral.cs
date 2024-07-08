@@ -22,7 +22,7 @@ public class FernSpiral : MonoBehaviour
         _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength);
         _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
-        _marker = new(MarkerPosition, Quaternion.identity, MarkerRadius);
+        _marker = new(_sdfVolumeTexture, MarkerPosition, Quaternion.identity, MarkerRadius);
     }
 
     void Update()
@@ -32,12 +32,10 @@ public class FernSpiral : MonoBehaviour
             MarkerPosition += MarkerDirection * MarkerMovementSpeed * Time.deltaTime;
             Quaternion rotation = Quaternion.RotateTowards(Quaternion.identity, MarkerDirectionDrift, MarkerMaxTurnSpeed * Time.deltaTime);
             MarkerDirection = rotation * MarkerDirection;
-            _marker.MarkTo(MarkerPosition, Quaternion.identity, MarkerRadius);
+            _marker.MarkTo(_sdfVolumeTexture, MarkerPosition, Quaternion.identity, MarkerRadius);
 
             MarkerMaxTurnSpeed *= 1 + (MarkerMaxTurnSpeedGrowthRate - 1) * Time.deltaTime;
             MarkerRadius *= 1 + (MarkerRadiusGrowthRate - 1) * Time.deltaTime;
         }
-
-        _marker.Render(_sdfVolumeTexture);
     }
 }
