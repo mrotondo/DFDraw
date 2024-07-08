@@ -277,7 +277,7 @@ MonoBehaviour:
   BranchLengthChangeFactor: 0.75
   BranchRadiusChangeFactor: 0.7
   BranchAngleRangeChangeFactor: 1.2
-  MaxBranchDepth: 10
+  MaxBranchDepth: 15
 --- !u!1 &1915091893
 GameObject:
   m_ObjectHideFlags: 0

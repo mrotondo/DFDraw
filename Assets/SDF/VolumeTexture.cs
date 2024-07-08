@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using static UnityEngine.Mathf;
 using System.Linq;
+using System;
 
 namespace SDF
 {
@@ -54,10 +55,19 @@ namespace SDF
         {
             int blitSpheresKernel = _updateSdfShader.FindKernel("BlitSpheres");
 
-            _updateSdfShader.SetInt("NumSpheres", _sphereQueue.Count);
-            _sphereBuffer.SetData<Sphere>(_sphereQueue);
-            _updateSdfShader.GetKernelThreadGroupSizes(blitSpheresKernel, out uint x, out uint y, out uint z);
-            _updateSdfShader.Dispatch(blitSpheresKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
+            int chunkSize = 4096;
+            for (int i = 0; i < Mathf.CeilToInt((float)_sphereQueue.Count / chunkSize); i++)
+            {
+                int startIndex = i * chunkSize;
+                int numSpheres = Mathf.Min(chunkSize, _sphereQueue.Count - startIndex);
+
+                _updateSdfShader.SetInt("NumSpheres", numSpheres);
+                _sphereBuffer.SetData<Sphere>(_sphereQueue, startIndex, 0, numSpheres);
+                _updateSdfShader.GetKernelThreadGroupSizes(blitSpheresKernel, out uint x, out uint y, out uint z);
+                _updateSdfShader.Dispatch(blitSpheresKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
+
+            }
+
 
             _sphereQueue.Clear();
         }
