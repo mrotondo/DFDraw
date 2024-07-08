@@ -205,7 +205,7 @@ Shader "Unlit/DFDraw"
                         float3 position = pointOnRay(marchingRay, result.length);
                         float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
                         fixed3 gray = normalizedSteps;
-                        col = fixed4(gray, 1);
+                        col = fixed4(position, 1);
                     } else {
                         col = fixed4(0.9, 0.9, 0.9, 1);
                     }
