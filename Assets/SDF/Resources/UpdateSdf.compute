@@ -1,5 +1,6 @@
 #pragma kernel Clear
 #pragma kernel BlitSphere
+#pragma kernel BlitSpheres
 
 RWTexture3D<unorm float> SdfVolumeTexture;
 
@@ -30,3 +31,35 @@ void BlitSphere(uint3 id : SV_DispatchThreadID)
         SdfVolumeTexture[id.xyz] = newDistance;
     }
 }
+
+struct Sphere
+{
+    float3 position;
+    float radius;
+};
+
+int NumSpheres;
+StructuredBuffer<Sphere> Spheres;
+[numthreads(8,8,8)]
+void BlitSpheres(uint3 id : SV_DispatchThreadID)
+{
+    // we assume cubic sdf volume texture when we only use texWidth in distance calculation
+    uint texWidth, texHeight, texDepth;
+    SdfVolumeTexture.GetDimensions(texWidth, texHeight, texDepth);
+    float3 samplePoint = (id.xyz / (texWidth - 1.0));
+    if (NumSpheres > 0)
+    {
+        float newDistance = 100000;
+        for (int i = 0; i < NumSpheres; i++)
+        {
+            Sphere sphere = Spheres[i];
+            newDistance = min(newDistance, sphereDistance(samplePoint - sphere.position, sphere.radius) * 0.5 + 0.5);
+        }
+        float oldDistance = SdfVolumeTexture[id.xyz];
+        if (newDistance < oldDistance)
+        {
+            SdfVolumeTexture[id.xyz] = newDistance;
+        }
+    }
+}
+

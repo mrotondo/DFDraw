@@ -45,6 +45,8 @@ public class Manzanita : MonoBehaviour
         }
         _growingBranches.RemoveAll(branch => branch.ReadyToBranch());
         _growingBranches.AddRange(newBranches);
+
+        _sdfVolumeTexture.Render();
     }
 
     private class Branch

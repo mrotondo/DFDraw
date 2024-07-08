@@ -8,10 +8,10 @@ public class Marker
     private Quaternion _orientation;
     private float _scale;
 
-    private readonly List<Mark> _marks;
-    private readonly float _translationMarkThreshold = 0.03f;  // units: world space distance
+    private readonly List<VolumeTexture.Sphere> _spheres;
+    private readonly float _translationMarkThreshold = 0.1f;  // units: world space distance
     private readonly float _rotationMarkThreshold = 5f;  // units: degrees
-    private readonly float _scaleMarkThreshold = 0.2f;  // units: ratio
+    private readonly float _scaleMarkThreshold = 0.4f;  // units: ratio
 
     public Marker(Vector3 initialPosition, Quaternion initialOrientation, float initialScale)
     {
@@ -19,9 +19,9 @@ public class Marker
         _orientation = initialOrientation;
         _scale = Mathf.Max(initialScale, Mathf.Epsilon);
 
-        _marks = new List<Mark>
+        _spheres = new List<VolumeTexture.Sphere>
         {
-            new(_position, _orientation, _scale)
+            new(_position, _scale)
         };
     }
 
@@ -41,9 +41,10 @@ public class Marker
         {
             float t = (i + 1.0f) / numMarks;
             Vector3 markPosition = Vector3.Lerp(_position, newPosition, t);
+            // Orientation is currently unused while we're just marking with spheres
             Quaternion markOrientation = Quaternion.Slerp(_orientation, newOrientation, t);
             float markScale = Mathf.Lerp(_scale, newScale, t);  // Won't generate linear size changes, but might be fine
-            _marks.Add(new(markPosition, markOrientation, markScale));
+            _spheres.Add(new(markPosition, markScale));
         }
 
         _position = newPosition;
@@ -53,24 +54,10 @@ public class Marker
 
     public void Render(VolumeTexture sdfVolumetexture)
     {
-        foreach (var mark in _marks)
+        foreach (var sphere in _spheres)
         {
-            sdfVolumetexture.BlitSphere(mark.Position, mark.Scale);
+            sdfVolumetexture.EnqueueSphere(sphere.Position, sphere.Radius);
         }
-        _marks.Clear();
-    }
-
-    private class Mark
-    {
-        public Vector3 Position;
-        public Quaternion Orientation;
-        public float Scale;
-
-        public Mark(Vector3 position, Quaternion orientation, float scale)
-        {
-            Position = position;
-            Orientation = orientation;
-            Scale = scale;
-        }
+        _spheres.Clear();
     }
 }

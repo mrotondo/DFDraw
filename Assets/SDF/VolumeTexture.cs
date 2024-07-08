@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 using static UnityEngine.Mathf;
+using System.Linq;
 
 namespace SDF
 {
@@ -10,6 +12,9 @@ namespace SDF
         private readonly uint _size;
         private readonly RenderTexture _sdfVolumeTexture;
         private readonly ComputeShader _updateSdfShader;
+
+        private readonly List<Sphere> _sphereQueue;
+        private readonly ComputeBuffer _sphereBuffer;
 
         public VolumeTexture(uint size)
         {
@@ -25,11 +30,17 @@ namespace SDF
             };
             _sdfVolumeTexture.Create();
 
+            _sphereQueue = new();
+            _sphereBuffer = new(4096, 4 * 4);
+
             _updateSdfShader = StaticResourcesLoader.UpdateSdfShader;
             int clearKernel = _updateSdfShader.FindKernel("Clear");
             _updateSdfShader.SetTexture(clearKernel, "SdfVolumeTexture", _sdfVolumeTexture);
             int blitSphereKernel = _updateSdfShader.FindKernel("BlitSphere");
             _updateSdfShader.SetTexture(blitSphereKernel, "SdfVolumeTexture", _sdfVolumeTexture);
+            int blitSpheresKernel = _updateSdfShader.FindKernel("BlitSpheres");
+            _updateSdfShader.SetTexture(blitSpheresKernel, "SdfVolumeTexture", _sdfVolumeTexture);
+            _updateSdfShader.SetBuffer(blitSpheresKernel, "Spheres", _sphereBuffer);
 
             Clear(1.0f);
         }
@@ -39,13 +50,21 @@ namespace SDF
             renderer.SdfVolumeTexture = _sdfVolumeTexture;
         }
 
-        public void BlitSphere(Vector3 position, float radius)
+        public void Render()
         {
-            int blitSphereKernel = _updateSdfShader.FindKernel("BlitSphere");
-            _updateSdfShader.SetVector("SpherePosition", position);
-            _updateSdfShader.SetFloat("SphereRadius", radius);
-            _updateSdfShader.GetKernelThreadGroupSizes(blitSphereKernel, out uint x, out uint y, out uint z);
-            _updateSdfShader.Dispatch(blitSphereKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
+            int blitSpheresKernel = _updateSdfShader.FindKernel("BlitSpheres");
+
+            _updateSdfShader.SetInt("NumSpheres", _sphereQueue.Count);
+            _sphereBuffer.SetData<Sphere>(_sphereQueue);
+            _updateSdfShader.GetKernelThreadGroupSizes(blitSpheresKernel, out uint x, out uint y, out uint z);
+            _updateSdfShader.Dispatch(blitSpheresKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
+
+            _sphereQueue.Clear();
+        }
+
+        public void EnqueueSphere(Vector3 position, float radius)
+        {
+            _sphereQueue.Add(new(position, radius));
         }
 
         public void Clear(float clearDistance)
@@ -54,6 +73,18 @@ namespace SDF
             _updateSdfShader.SetFloat("ClearDistance", clearDistance);
             _updateSdfShader.GetKernelThreadGroupSizes(clearKernel, out uint x, out uint y, out uint z);
             _updateSdfShader.Dispatch(clearKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
+        }
+
+        public struct Sphere
+        {
+            public Vector3 Position;
+            public float Radius;
+
+            public Sphere(Vector3 position, float radius)
+            {
+                Position = position;
+                Radius = radius;
+            }
         }
     }
 }
