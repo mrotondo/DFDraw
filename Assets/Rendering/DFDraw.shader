@@ -72,6 +72,7 @@ Shader "Unlit/DFDraw"
             float _DistanceThreshold;
             int _MaxSteps;
             float _MaxMarchLength;
+            float _MaxStepLength;
 
             Ray fragmentRay(float verticalFieldOfView,
                 float3 camPosition,
@@ -153,7 +154,7 @@ Shader "Unlit/DFDraw"
                 while (abs(distance) > _DistanceThreshold
                        && steps < _MaxSteps
                        && marchLength < _MaxMarchLength) {
-                    marchLength += abs(distance);
+                    marchLength += min(_MaxStepLength, abs(distance));
                     samplePoint = pointOnRay(ray, marchLength);
                     distance = volumeTextureDistance(samplePoint, volumeTexture);
                     steps++;

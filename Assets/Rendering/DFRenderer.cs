@@ -7,6 +7,7 @@ public class DFRenderer : MonoBehaviour
     public float DistanceThreshold;
     public int MaxSteps;
     public float MaxMarchLength;
+    public float MaxStepLength;
 
     public RenderTexture SdfVolumeTexture
     {
@@ -28,6 +29,7 @@ public class DFRenderer : MonoBehaviour
         dfMaterial.SetFloat("_DistanceThreshold", DistanceThreshold);
         dfMaterial.SetInt("_MaxSteps", MaxSteps);
         dfMaterial.SetFloat("_MaxMarchLength", MaxMarchLength);
+        dfMaterial.SetFloat("_MaxStepLength", MaxStepLength);
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dst)

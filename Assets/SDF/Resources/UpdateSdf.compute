@@ -1,5 +1,4 @@
 #pragma kernel Clear
-#pragma kernel BlitSphere
 #pragma kernel BlitSpheres
 
 RWTexture3D<unorm float> SdfVolumeTexture;
@@ -16,22 +15,6 @@ float sphereDistance(float3 samplePoint, float radius)
     return length(samplePoint) - radius;
 }
 
-float3 SpherePosition;
-float SphereRadius;
-[numthreads(8,8,8)]
-void BlitSphere(uint3 id : SV_DispatchThreadID)
-{
-    // assume cubic sdf volume texture
-    uint texWidth, texHeight, texDepth;
-    SdfVolumeTexture.GetDimensions(texWidth, texHeight, texDepth);
-    float newDistance = sphereDistance((id.xyz / (texWidth - 1.0)) - SpherePosition, SphereRadius) * 0.5 + 0.5;
-    float oldDistance = SdfVolumeTexture[id.xyz];
-    if (newDistance < oldDistance)
-    {
-        SdfVolumeTexture[id.xyz] = newDistance;
-    }
-}
-
 struct Sphere
 {
     float3 position;
@@ -39,6 +22,7 @@ struct Sphere
 };
 
 int NumSpheres;
+int4 TexelOffset;
 StructuredBuffer<Sphere> Spheres;
 [numthreads(8,8,8)]
 void BlitSpheres(uint3 id : SV_DispatchThreadID)
@@ -46,7 +30,8 @@ void BlitSpheres(uint3 id : SV_DispatchThreadID)
     // we assume cubic sdf volume texture when we only use texWidth in distance calculation
     uint texWidth, texHeight, texDepth;
     SdfVolumeTexture.GetDimensions(texWidth, texHeight, texDepth);
-    float3 samplePoint = (id.xyz / (texWidth - 1.0));
+    uint3 texelIndex = id.xyz + TexelOffset.xyz;
+    float3 samplePoint = texelIndex / (texWidth - 1.0);
     if (NumSpheres > 0)
     {
         float newDistance = 100000;
@@ -55,10 +40,10 @@ void BlitSpheres(uint3 id : SV_DispatchThreadID)
             Sphere sphere = Spheres[i];
             newDistance = min(newDistance, sphereDistance(samplePoint - sphere.position, sphere.radius) * 0.5 + 0.5);
         }
-        float oldDistance = SdfVolumeTexture[id.xyz];
+        float oldDistance = SdfVolumeTexture[texelIndex];
         if (newDistance < oldDistance)
         {
-            SdfVolumeTexture[id.xyz] = newDistance;
+            SdfVolumeTexture[texelIndex] = newDistance;
         }
     }
 }

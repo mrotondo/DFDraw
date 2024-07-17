@@ -231,8 +231,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dfMaterial: {fileID: 2100000, guid: 167a7520116804f5aa339ef655419281, type: 2}
   DistanceThreshold: 0.005
-  MaxSteps: 40
+  MaxSteps: 200
   MaxMarchLength: 3
+  MaxStepLength: 0.01
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -246,6 +247,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SdfVolumeSideLength: 128
+  SdfVolumneNumCellsPerDimension: 2
   MarkerPosition: {x: 0.3, y: 0, z: 0.8}
   MarkerMovementSpeed: 0.6
   MarkerDirection: {x: -0.5, y: 0.5, z: 0}
@@ -267,6 +269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SdfVolumeSideLength: 128
+  SdfVolumneNumCellsPerDimension: 4
   BasePosition: {x: 0.5, y: 0, z: 0.5}
   GrowthRate: 0.1
   InitialGrowthDirection: {x: 0, y: 1, z: 0}
