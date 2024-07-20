@@ -73,10 +73,10 @@ namespace SDF
         private uint CellIndexForPosition(Vector3 position)
         {
 
-            uint cellX = (uint)Mathf.FloorToInt(position.x * _cellsPerDimension);
-            uint cellY = (uint)Mathf.FloorToInt(position.y * _cellsPerDimension);
-            uint cellZ = (uint)Mathf.FloorToInt(position.z * _cellsPerDimension);
-            return cellZ * _cellsPerDimension * _cellsPerDimension + cellY * _cellsPerDimension + cellX;
+            var cellX = Math.Floor(position.x * _cellsPerDimension);
+            var cellY = Math.Floor(position.y * _cellsPerDimension);
+            var cellZ = Math.Floor(position.z * _cellsPerDimension);
+            return (uint)(cellZ * _cellsPerDimension * _cellsPerDimension + cellY * _cellsPerDimension + cellX);
         }
 
         public void ConfigureRenderer(DFRenderer renderer)
