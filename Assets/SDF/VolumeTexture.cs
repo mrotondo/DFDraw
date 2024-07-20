@@ -15,7 +15,7 @@ namespace SDF
         private readonly uint _cellsPerLayer;
         private readonly uint _cellSize;
         private readonly uint _numCells;
-        private readonly List<List<Vector4>> _sphereQueues;
+        private readonly List<Vector4>[] _sphereQueues;
 
         public uint ChunkSize = 4096;
         private readonly ComputeBuffer _sphereBuffer;
@@ -40,10 +40,10 @@ namespace SDF
             };
             _sdfVolumeTexture.Create();
 
-            _sphereQueues = new();
+            _sphereQueues = new List<Vector4>[_numCells];
             for (int i = 0; i < _numCells; i++)
             {
-                _sphereQueues.Add(new());
+                _sphereQueues[i] = new();
             }
 
             _sphereBuffer = new((int)ChunkSize, 4 * 4);
@@ -116,13 +116,18 @@ namespace SDF
         public void EnqueueSphere(Vector3 position, float radius)
         {
             (int cellX, int cellY, int cellZ) = CellIndexForPosition(position);
-            int sphereQueueIndex = (int)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
+            uint sphereQueueIndex = (uint)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
 
             Vector4 sphere = position;
             sphere.w = radius;
             if (sphereQueueIndex >= 0 && sphereQueueIndex < _numCells)
             {
-                _sphereQueues[sphereQueueIndex].Add(sphere);
+                var sphereQueue = _sphereQueues[(int)sphereQueueIndex];
+                sphereQueue.Add(sphere);
+                if (sphereQueue.Count == ChunkSize)
+                {
+                    RenderCell(sphereQueueIndex);
+                }
             }
 
             for (int x = -1; x <= 1; x++)
@@ -134,10 +139,15 @@ namespace SDF
                         int offsetX = cellX + x;
                         int offsetY = cellY + y;
                         int offsetZ = cellZ + z;
-                        int offsetSphereQueueIndex = (int)(offsetZ * _cellsPerLayer + offsetY * _cellsPerDimension + offsetX);
+                        uint offsetSphereQueueIndex = (uint)(offsetZ * _cellsPerLayer + offsetY * _cellsPerDimension + offsetX);
                         if (offsetSphereQueueIndex >= 0 && offsetSphereQueueIndex < _numCells)
                         {
-                            _sphereQueues[offsetSphereQueueIndex].Add(sphere);
+                            var sphereQueue = _sphereQueues[(int)offsetSphereQueueIndex];
+                            sphereQueue.Add(sphere);
+                            if (sphereQueue.Count == ChunkSize)
+                            {
+                                RenderCell(offsetSphereQueueIndex);
+                            }
                         }
                     }
                 }
