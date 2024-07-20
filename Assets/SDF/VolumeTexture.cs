@@ -15,7 +15,7 @@ namespace SDF
         private readonly uint _cellsPerLayer;
         private readonly uint _cellSize;
         private readonly uint _numCells;
-        private readonly List<List<Sphere>> _sphereQueues;
+        private readonly List<List<Vector4>> _sphereQueues;
 
         public uint ChunkSize = 4096;
         private readonly ComputeBuffer _sphereBuffer;
@@ -106,7 +106,7 @@ namespace SDF
                 uint numSpheres = Math.Min(ChunkSize, (uint)sphereQueue.Count - startIndex);
 
                 _updateSdfShader.SetInt("NumSpheres", (int)numSpheres);
-                _sphereBuffer.SetData<Sphere>(sphereQueue, (int)startIndex, 0, (int)numSpheres);
+                _sphereBuffer.SetData<Vector4>(sphereQueue, (int)startIndex, 0, (int)numSpheres);
                 _updateSdfShader.Dispatch(_blitSpheresKernel, xThreadGroups, yThreadGroups, zThreadGroups);
             }
 
@@ -117,9 +117,12 @@ namespace SDF
         {
             (int cellX, int cellY, int cellZ) = CellIndexForPosition(position);
             int sphereQueueIndex = (int)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
+
+            Vector4 sphere = position;
+            sphere.w = radius;
             if (sphereQueueIndex >= 0 && sphereQueueIndex < _numCells)
             {
-                _sphereQueues[sphereQueueIndex].Add(new(position, radius));
+                _sphereQueues[sphereQueueIndex].Add(sphere);
             }
 
             for (int x = -1; x <= 1; x++)
@@ -134,7 +137,7 @@ namespace SDF
                         int offsetSphereQueueIndex = (int)(offsetZ * _cellsPerLayer + offsetY * _cellsPerDimension + offsetX);
                         if (offsetSphereQueueIndex >= 0 && offsetSphereQueueIndex < _numCells)
                         {
-                            _sphereQueues[offsetSphereQueueIndex].Add(new(position, radius));
+                            _sphereQueues[offsetSphereQueueIndex].Add(sphere);
                         }
                     }
                 }
@@ -146,18 +149,6 @@ namespace SDF
             _updateSdfShader.SetFloat("ClearDistance", clearDistance);
             _updateSdfShader.GetKernelThreadGroupSizes(_clearKernel, out uint x, out uint y, out uint z);
             _updateSdfShader.Dispatch(_clearKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
-        }
-
-        public struct Sphere
-        {
-            public Vector3 Position;
-            public float Radius;
-
-            public Sphere(Vector3 position, float radius)
-            {
-                Position = position;
-                Radius = radius;
-            }
         }
     }
 }
