@@ -1,9 +1,6 @@
 using System.Collections.Generic;
-using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
-using static UnityEngine.Mathf;
-using System.Linq;
 using System;
 
 namespace SDF
@@ -15,6 +12,7 @@ namespace SDF
         private readonly ComputeShader _updateSdfShader;
 
         private readonly uint _cellsPerDimension;
+        private readonly uint _cellsPerLayer;
         private readonly uint _cellSize;
         private readonly uint _numCells;
         private readonly List<List<Sphere>> _sphereQueues;
@@ -28,6 +26,7 @@ namespace SDF
         {
             _size = size;
             _cellsPerDimension = cellsPerDimension;
+            _cellsPerLayer = cellsPerDimension * cellsPerDimension;
             _numCells = cellsPerDimension * cellsPerDimension * cellsPerDimension;
             _cellSize = size / cellsPerDimension;
 
@@ -63,20 +62,17 @@ namespace SDF
 
         private Vector3Int MinTexelForCell(uint cellIndex)
         {
-            uint cellsPerLayer = _cellsPerDimension * _cellsPerDimension;
             uint cellX = cellIndex % _cellsPerDimension;
-            uint cellY = cellIndex % cellsPerLayer / _cellsPerDimension;
-            uint cellZ = cellIndex / cellsPerLayer;
+            uint cellY = cellIndex % _cellsPerLayer / _cellsPerDimension;
+            uint cellZ = cellIndex / _cellsPerLayer;
             return new Vector3Int((int)cellX, (int)cellY, (int)cellZ) * (int)_cellSize;
         }
 
-        private uint CellIndexForPosition(Vector3 position)
+        private (int, int, int) CellIndexForPosition(Vector3 position)
         {
-
-            var cellX = Math.Floor(position.x * _cellsPerDimension);
-            var cellY = Math.Floor(position.y * _cellsPerDimension);
-            var cellZ = Math.Floor(position.z * _cellsPerDimension);
-            return (uint)(cellZ * _cellsPerDimension * _cellsPerDimension + cellY * _cellsPerDimension + cellX);
+            return ((int)(position.x * _cellsPerDimension),
+                    (int)(position.y * _cellsPerDimension),
+                    (int)(position.z * _cellsPerDimension));
         }
 
         public void ConfigureRenderer(DFRenderer renderer)
@@ -119,20 +115,26 @@ namespace SDF
 
         public void EnqueueSphere(Vector3 position, float radius)
         {
-            bool[] cellsAddedTo = new bool[_numCells];
+            (int cellX, int cellY, int cellZ) = CellIndexForPosition(position);
+            int sphereQueueIndex = (int)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
+            if (sphereQueueIndex >= 0 && sphereQueueIndex < _numCells)
+            {
+                _sphereQueues[sphereQueueIndex].Add(new(position, radius));
+            }
+
             for (int x = -1; x <= 1; x++)
             {
                 for (int y = -1; y <= 1; y++)
                 {
                     for (int z = -1; z <= 1; z++)
                     {
-                        var positionOffset = new Vector3(x * radius, y * radius, z * radius);
-                        uint cellIndex = CellIndexForPosition(position + positionOffset);
-                        if (cellIndex < _numCells && !cellsAddedTo[cellIndex])
+                        int offsetX = cellX + x;
+                        int offsetY = cellY + y;
+                        int offsetZ = cellZ + z;
+                        int offsetSphereQueueIndex = (int)(offsetZ * _cellsPerLayer + offsetY * _cellsPerDimension + offsetX);
+                        if (offsetSphereQueueIndex >= 0 && offsetSphereQueueIndex < _numCells)
                         {
-                            var sphereQueue = _sphereQueues[(int)cellIndex];
-                            sphereQueue.Add(new(position, radius));
-                            cellsAddedTo[cellIndex] = true;
+                            _sphereQueues[offsetSphereQueueIndex].Add(new(position, radius));
                         }
                     }
                 }
