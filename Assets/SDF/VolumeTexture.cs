@@ -119,7 +119,7 @@ namespace SDF
 
         public void EnqueueSphere(Vector3 position, float radius)
         {
-            HashSet<uint> cellsAddedTo = new();  // This could be optimized for less alloc/gc
+            bool[] cellsAddedTo = new bool[_numCells];
             for (int x = -1; x <= 1; x++)
             {
                 for (int y = -1; y <= 1; y++)
@@ -128,11 +128,11 @@ namespace SDF
                     {
                         var positionOffset = new Vector3(x * radius, y * radius, z * radius);
                         uint cellIndex = CellIndexForPosition(position + positionOffset);
-                        if (!cellsAddedTo.Contains(cellIndex) && cellIndex < _numCells)
+                        if (cellIndex < _numCells && !cellsAddedTo[cellIndex])
                         {
                             var sphereQueue = _sphereQueues[(int)cellIndex];
                             sphereQueue.Add(new(position, radius));
-                            cellsAddedTo.Add(cellIndex);
+                            cellsAddedTo[cellIndex] = true;
                         }
                     }
                 }

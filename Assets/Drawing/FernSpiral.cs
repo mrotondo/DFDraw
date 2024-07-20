@@ -4,7 +4,7 @@ using UnityEngine;
 public class FernSpiral : MonoBehaviour
 {
     public uint SdfVolumeSideLength;
-    public uint SdfVolumneNumCellsPerDimension;
+    public uint SdfVolumeNumCellsPerDimension;
 
     private VolumeTexture _sdfVolumeTexture;
     private Marker _marker;
@@ -20,7 +20,7 @@ public class FernSpiral : MonoBehaviour
 
     void Start()
     {
-        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength, SdfVolumneNumCellsPerDimension);
+        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
         _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
         _marker = new(_sdfVolumeTexture, MarkerPosition, Quaternion.identity, MarkerRadius);

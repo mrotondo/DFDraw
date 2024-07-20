@@ -5,7 +5,7 @@ using UnityEngine;
 public class Manzanita : MonoBehaviour
 {
     public uint SdfVolumeSideLength = 128;
-    public uint SdfVolumneNumCellsPerDimension;
+    public uint SdfVolumeNumCellsPerDimension;
 
     private VolumeTexture _sdfVolumeTexture;
 
@@ -26,7 +26,7 @@ public class Manzanita : MonoBehaviour
 
     void Start()
     {
-        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength, SdfVolumneNumCellsPerDimension);
+        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
         _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
         _random = new System.Random();

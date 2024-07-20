@@ -247,7 +247,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SdfVolumeSideLength: 128
-  SdfVolumneNumCellsPerDimension: 2
+  SdfVolumeNumCellsPerDimension: 4
   MarkerPosition: {x: 0.3, y: 0, z: 0.8}
   MarkerMovementSpeed: 0.6
   MarkerDirection: {x: -0.5, y: 0.5, z: 0}
@@ -269,7 +269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SdfVolumeSideLength: 128
-  SdfVolumneNumCellsPerDimension: 4
+  SdfVolumeNumCellsPerDimension: 4
   BasePosition: {x: 0.5, y: 0, z: 0.5}
   GrowthRate: 0.1
   InitialGrowthDirection: {x: 0, y: 1, z: 0}
@@ -280,7 +280,7 @@ MonoBehaviour:
   BranchLengthChangeFactor: 0.75
   BranchRadiusChangeFactor: 0.7
   BranchAngleRangeChangeFactor: 1.2
-  MaxBranchDepth: 15
+  MaxBranchDepth: 20
 --- !u!1 &1915091893
 GameObject:
   m_ObjectHideFlags: 0
