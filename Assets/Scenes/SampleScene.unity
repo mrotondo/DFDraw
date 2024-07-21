@@ -136,6 +136,7 @@ GameObject:
   - component: {fileID: 963194229}
   - component: {fileID: 963194230}
   - component: {fileID: 963194231}
+  - component: {fileID: 963194232}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -263,7 +264,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 12725753ae55b4b8da0425ee729a7b9d, type: 3}
   m_Name: 
@@ -281,6 +282,33 @@ MonoBehaviour:
   BranchRadiusChangeFactor: 0.7
   BranchAngleRangeChangeFactor: 1.2
   MaxBranchDepth: 20
+--- !u!114 &963194232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5404aef935d654aa9aa35548162082b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SdfVolumeSideLength: 128
+  SdfVolumeNumCellsPerDimension: 4
+  BasePosition: {x: 0.5, y: 0, z: 0.5}
+  GrowthRate: 0.5
+  InitialGrowthDirection: {x: 0, y: 1, z: 0}
+  InitialRadius: 0.05
+  RadiusGrowthRate: 0.5
+  TrunkLength: 0.85
+  BranchTimeInterval: 0.001
+  BranchLength: 0.2
+  BranchAngleRange: 45
+  BranchLengthChangeFactor: 0.3
+  BranchRadiusChangeFactor: 0.2
+  BranchAngleRangeChangeFactor: 0.8
+  MaxBranchDepth: 5
 --- !u!1 &1915091893
 GameObject:
   m_ObjectHideFlags: 0
