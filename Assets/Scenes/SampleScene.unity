@@ -269,18 +269,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SdfVolumeSideLength: 128
-  SdfVolumeNumCellsPerDimension: 4
+  SdfVolumeNumCellsPerDimension: 8
   BasePosition: {x: 0.5, y: 0, z: 0.5}
   GrowthRate: 0.1
   InitialGrowthDirection: {x: 0, y: 1, z: 0}
   InitialRadius: 0.05
   RadiusGrowthRate: 0.8
-  BranchLength: 0.2
-  BranchAngleRange: 45
+  BranchLength: 0.15
+  BranchAngleRange: 35
   BranchLengthChangeFactor: 0.75
   BranchRadiusChangeFactor: 0.7
   BranchAngleRangeChangeFactor: 1.2
-  MaxBranchDepth: 15
+  MaxBranchDepth: 20
 --- !u!1 &1915091893
 GameObject:
   m_ObjectHideFlags: 0

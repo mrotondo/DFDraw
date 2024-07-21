@@ -75,7 +75,7 @@ public class Manzanita : MonoBehaviour
             _growthDirection = growthDirection;
             _radius = radius;
             _radiusGrowthRate = radiusGrowthRate;
-            _maxLength = maxLength;
+            _maxLength = maxLength * Random.Range(0.7f, 1.3f);
             _branchAngleRange = branchAngleRange;
             Depth = depth;
             _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius);
@@ -91,9 +91,8 @@ public class Manzanita : MonoBehaviour
             return Length() > _maxLength;
         }
 
-        public List<Branch> CreateBranches(System.Random random, VolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, int maxBranchDepth)
+        public IEnumerable<Branch> CreateBranches(System.Random random, VolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, int maxBranchDepth)
         {
-            List<Branch> branches = new();
             float t = (float)Depth / maxBranchDepth;
             int numBranches = random.Next(Mathf.FloorToInt(Mathf.Lerp(3,1,t)), Mathf.FloorToInt(Mathf.Lerp(5,2,t)));
             for (int i = 0; i < numBranches; i++)
@@ -103,7 +102,7 @@ public class Manzanita : MonoBehaviour
                 var rotation = Quaternion.FromToRotation(Vector3.up, circlePositionProjectedUpwards);
                 var newGrowthDirection = rotation * _growthDirection;
 
-                branches.Add(new(
+                yield return new(
                     sdfVolumeTexture,
                     _position,
                     _growthRate,
@@ -112,9 +111,8 @@ public class Manzanita : MonoBehaviour
                     _radiusGrowthRate,
                     _maxLength * branchLengthChangeFactor,
                     _branchAngleRange * branchAngleRangeChangeFactor,
-                    Depth + 1));
+                    Depth + 1);
             }
-            return branches;
         }
 
         public void GrowAndRender(VolumeTexture sdfVolumeTexture)
