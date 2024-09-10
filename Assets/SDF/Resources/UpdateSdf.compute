@@ -32,19 +32,17 @@ void BlitSpheres(uint3 id : SV_DispatchThreadID)
     SdfVolumeTexture.GetDimensions(texWidth, texHeight, texDepth);
     uint3 texelIndex = id.xyz + TexelOffset.xyz;
     float3 samplePoint = texelIndex / (texWidth - 1.0);
-    if (NumSpheres > 0)
+
+    float newDistance = 100000;
+    for (int i = 0; i < NumSpheres; i++)
     {
-        float newDistance = 100000;
-        for (int i = 0; i < NumSpheres; i++)
-        {
-            Sphere sphere = Spheres[i];
-            newDistance = min(newDistance, sphereDistance(samplePoint - sphere.position, sphere.radius) * 0.5 + 0.5);
-        }
-        float oldDistance = SdfVolumeTexture[texelIndex];
-        if (newDistance < oldDistance)
-        {
-            SdfVolumeTexture[texelIndex] = newDistance;
-        }
+        Sphere sphere = Spheres[i];
+        newDistance = min(newDistance, sphereDistance(samplePoint - sphere.position, sphere.radius) * 0.5 + 0.5);
+    }
+    float oldDistance = SdfVolumeTexture[texelIndex];
+    if (newDistance < oldDistance)
+    {
+        SdfVolumeTexture[texelIndex] = newDistance;
     }
 }
 

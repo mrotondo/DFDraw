@@ -197,19 +197,19 @@ Shader "Unlit/DFDraw"
                     marchingRay.direction = boundingBoxRay.direction;
 
                     RayMarchResult result = volumeTextureMarch(marchingRay, _SdfVolumeTexture);
+                    float normalizedLength = result.length / _MaxMarchLength;
+                    float normalizedSteps = result.steps / _MaxSteps;
                     float distance = result.distance;
+                    fixed3 gray = normalizedSteps;
                     if (distance < _DistanceThreshold) {
-                        float normalizedLength = result.length / _MaxMarchLength;
-                        float normalizedSteps = result.steps / _MaxSteps;
                         float3 position = pointOnRay(marchingRay, result.length);
                         float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
-                        fixed3 gray = normalizedSteps;
-                        col = fixed4(position, 1);
+                        col = fixed4(gray, 1);
                     } else {
-                        col = fixed4(0.9, 0.9, 0.9, 1);
+                        col = fixed4(1, 0, 0, 1);
                     }
                 } else {
-                    col = fixed4(1, 1, 1, 1);
+                    col = fixed4(0, 0, 0, 1);
                 }
 
                 return col;
