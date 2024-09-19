@@ -9,18 +9,27 @@ namespace SDF
     {
         private readonly uint _size;
         private readonly RenderTexture _sdfVolumeTexture;
+        private readonly RenderTexture _colorVolumeTexture;
         private readonly ComputeShader _updateSdfShader;
 
         private readonly uint _cellsPerDimension;
         private readonly uint _cellsPerLayer;
         private readonly uint _cellSize;
         private readonly uint _numCells;
-        private readonly List<Vector4>[] _sphereQueues;
+        private readonly List<Sphere>[] _sphereQueues;
 
-        public uint ChunkSize = 4096;
+        public const uint ChunkSize = 1024;
         private readonly ComputeBuffer _sphereBuffer;
-        private int _clearKernel;
-        private int _blitSpheresKernel;
+        private readonly int _clearKernel;
+        private readonly int _blitSpheresKernel;
+
+        private struct Sphere
+        {
+            public Vector3 position;
+            public float radius;
+            public Vector3 color;
+            float unusedPadding;
+        }
 
         public VolumeTexture(uint size, uint cellsPerDimension)
         {
@@ -40,24 +49,37 @@ namespace SDF
             };
             _sdfVolumeTexture.Create();
 
-            _sphereQueues = new List<Vector4>[_numCells];
+            _colorVolumeTexture = new RenderTexture((int)size, (int)size, 0, RenderTextureFormat.RGB111110Float)
+            {
+                enableRandomWrite = true,
+                dimension = TextureDimension.Tex3D,
+                volumeDepth = (int)size,
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+            _colorVolumeTexture.Create();
+
+            _sphereQueues = new List<Sphere>[_numCells];
             for (int i = 0; i < _numCells; i++)
             {
                 _sphereQueues[i] = new();
             }
 
-            _sphereBuffer = new((int)ChunkSize, 4 * 4);
+            int sizeOfSphereInBytes = 8 * 4;
+            _sphereBuffer = new((int)ChunkSize, sizeOfSphereInBytes);
 
             _updateSdfShader = StaticResourcesLoader.UpdateSdfShader;
 
             _clearKernel = _updateSdfShader.FindKernel("Clear");
             _updateSdfShader.SetTexture(_clearKernel, "SdfVolumeTexture", _sdfVolumeTexture);
+            _updateSdfShader.SetTexture(_clearKernel, "ColorVolumeTexture", _colorVolumeTexture);
 
             _blitSpheresKernel = _updateSdfShader.FindKernel("BlitSpheres");
             _updateSdfShader.SetTexture(_blitSpheresKernel, "SdfVolumeTexture", _sdfVolumeTexture);
+            _updateSdfShader.SetTexture(_blitSpheresKernel, "ColorVolumeTexture", _colorVolumeTexture);
             _updateSdfShader.SetBuffer(_blitSpheresKernel, "Spheres", _sphereBuffer);
 
-            Clear(1.0f);
+            Clear(1.0f, Color.red);
         }
 
         private Vector3Int MinTexelForCell(uint cellIndex)
@@ -78,6 +100,7 @@ namespace SDF
         public void ConfigureRenderer(DFRenderer renderer)
         {
             renderer.SdfVolumeTexture = _sdfVolumeTexture;
+            renderer.ColorVolumeTexture = _colorVolumeTexture;
         }
 
         public void Render()
@@ -100,13 +123,18 @@ namespace SDF
             Vector3Int cellTexelOffset = MinTexelForCell(cellIndex);
             _updateSdfShader.SetInts("TexelOffset", new int[] { cellTexelOffset.x, cellTexelOffset.y, cellTexelOffset.z, 0 });
 
+            if (sphereQueue.Count > ChunkSize)
+            {
+                Debug.Log("Whoops! Rendering " + sphereQueue.Count + " spheres (aka " + Mathf.CeilToInt((float)sphereQueue.Count / ChunkSize) + " chunks) for cell " + cellIndex);
+            }
+
             for (uint i = 0; i < Mathf.CeilToInt((float)sphereQueue.Count / ChunkSize); i++)
             {
                 uint startIndex = i * ChunkSize;
                 uint numSpheres = Math.Min(ChunkSize, (uint)sphereQueue.Count - startIndex);
 
                 _updateSdfShader.SetInt("NumSpheres", (int)numSpheres);
-                _sphereBuffer.SetData<Vector4>(sphereQueue, (int)startIndex, 0, (int)numSpheres);
+                _sphereBuffer.SetData<Sphere>(sphereQueue, (int)startIndex, 0, (int)numSpheres);
                 _updateSdfShader.Dispatch(_blitSpheresKernel, xThreadGroups, yThreadGroups, zThreadGroups);
             }
 
@@ -118,8 +146,8 @@ namespace SDF
             (int cellX, int cellY, int cellZ) = CellIndexForPosition(position);
             uint sphereQueueIndex = (uint)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
 
-            Vector4 sphere = position;
-            sphere.w = radius;
+            Sphere sphere = new() { position = position, radius = radius, color = new Vector3(1f, 1f, 1f) };
+
             if (sphereQueueIndex >= 0 && sphereQueueIndex < _numCells)
             {
                 var sphereQueue = _sphereQueues[(int)sphereQueueIndex];
@@ -154,9 +182,10 @@ namespace SDF
             }
         }
 
-        public void Clear(float clearDistance)
+        public void Clear(float clearDistance, Color clearColor)
         {
             _updateSdfShader.SetFloat("ClearDistance", clearDistance);
+            _updateSdfShader.SetVector("ClearColor", clearColor);
             _updateSdfShader.GetKernelThreadGroupSizes(_clearKernel, out uint x, out uint y, out uint z);
             _updateSdfShader.Dispatch(_clearKernel, (int)(_size / x), (int)(_size / y), (int)(_size / z));
         }

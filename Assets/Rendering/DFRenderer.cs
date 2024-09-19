@@ -13,6 +13,10 @@ public class DFRenderer : MonoBehaviour
     {
         set => dfMaterial.SetTexture("_SdfVolumeTexture", value);
     }
+    public RenderTexture ColorVolumeTexture
+    {
+        set => dfMaterial.SetTexture("_ColorVolumeTexture", value);
+    }
 
     void Update()
     {

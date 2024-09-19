@@ -3,6 +3,7 @@ Shader "Unlit/DFDraw"
     Properties
     {
         _SdfVolumeTexture ("SDF Volume Texture", 3D) = "white" {}
+        _ColorVolumeTexture("Color Volume Texture", 3D) = "white" {}
     }
     SubShader
     {
@@ -66,6 +67,8 @@ Shader "Unlit/DFDraw"
 
             sampler3D _SdfVolumeTexture;
             float4 _SdfVolumeTexture_ST;
+            sampler3D _ColorVolumeTexture;
+            float4 _ColorVolumeTexture_ST;
 
             float _DistanceThreshold;
             int _MaxSteps;
@@ -128,6 +131,11 @@ Shader "Unlit/DFDraw"
             float volumeTextureDistance(float3 samplePoint, sampler3D volumeTexture)
             {
                 return alphaToDistance(tex3D(volumeTexture, samplePoint).r);
+            }
+
+            float3 volumeTextureColor(float3 samplePoint, sampler3D volumeTexture)
+            {
+                return tex3D(volumeTexture, samplePoint).rgb;    
             }
 
             float3 volumeTextureNormal(float3 samplePoint, sampler3D volumeTexture)
@@ -204,9 +212,11 @@ Shader "Unlit/DFDraw"
                     if (distance < _DistanceThreshold) {
                         float3 position = pointOnRay(marchingRay, result.length);
                         float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
-                        col = fixed4(gray, 1);
+                        float3 color = volumeTextureColor(position, _ColorVolumeTexture);
+                        col = fixed4(normal * color, 1);
+                        // col = fixed4(normal, 1);
                     } else {
-                        col = fixed4(1, 0, 0, 1);
+                        col = fixed4(0.1, 0.2, 0.3, 1);
                     }
                 } else {
                     col = fixed4(0, 0, 0, 1);

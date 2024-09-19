@@ -276,10 +276,10 @@ MonoBehaviour:
   InitialGrowthDirection: {x: 0, y: 1, z: 0}
   InitialRadius: 0.03
   RadiusGrowthRate: 0.8
-  BranchLength: 0.15
+  BranchLength: 0.25
   BranchAngleRange: 20
   BranchLengthChangeFactor: 0.7
-  BranchRadiusChangeFactor: 0.7
+  BranchRadiusChangeFactor: 0.6
   BranchAngleRangeChangeFactor: 1.2
   MaxBranchDepth: 17
 --- !u!114 &963194232

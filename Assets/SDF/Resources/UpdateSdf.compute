@@ -2,12 +2,15 @@
 #pragma kernel BlitSpheres
 
 RWTexture3D<unorm float> SdfVolumeTexture;
+RWTexture3D<unorm float3> ColorVolumeTexture;
 
 float ClearDistance;
+float3 ClearColor;
 [numthreads(8,8,8)]
 void Clear(uint3 id : SV_DispatchThreadID)
 {
     SdfVolumeTexture[id.xyz] = ClearDistance;
+    ColorVolumeTexture[id.xyz] = ClearColor;
 }
 
 float sphereDistance(float3 samplePoint, float radius)
@@ -19,6 +22,8 @@ struct Sphere
 {
     float3 position;
     float radius;
+    float3 color;
+    float unusedSpacing;
 };
 
 int NumSpheres;
@@ -34,15 +39,22 @@ void BlitSpheres(uint3 id : SV_DispatchThreadID)
     float3 samplePoint = texelIndex / (texWidth - 1.0);
 
     float newDistance = 100000;
+    int closestSphereIndex = -1;
     for (int i = 0; i < NumSpheres; i++)
     {
         Sphere sphere = Spheres[i];
-        newDistance = min(newDistance, sphereDistance(samplePoint - sphere.position, sphere.radius) * 0.5 + 0.5);
+        float distance = sphereDistance(samplePoint - sphere.position, sphere.radius) * 0.5 + 0.5;
+        if (distance < newDistance)
+        {
+            newDistance = distance;
+            closestSphereIndex = i;
+        }
     }
     float oldDistance = SdfVolumeTexture[texelIndex];
     if (newDistance < oldDistance)
     {
         SdfVolumeTexture[texelIndex] = newDistance;
+        ColorVolumeTexture[texelIndex] = Spheres[i].color;
     }
 }
 
