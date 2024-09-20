@@ -54,7 +54,7 @@ void BlitSpheres(uint3 id : SV_DispatchThreadID)
     if (newDistance < oldDistance)
     {
         SdfVolumeTexture[texelIndex] = newDistance;
-        ColorVolumeTexture[texelIndex] = Spheres[i].color;
+        ColorVolumeTexture[texelIndex] = Spheres[closestSphereIndex].color;
     }
 }
 

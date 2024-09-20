@@ -123,11 +123,6 @@ namespace SDF
             Vector3Int cellTexelOffset = MinTexelForCell(cellIndex);
             _updateSdfShader.SetInts("TexelOffset", new int[] { cellTexelOffset.x, cellTexelOffset.y, cellTexelOffset.z, 0 });
 
-            if (sphereQueue.Count > ChunkSize)
-            {
-                Debug.Log("Whoops! Rendering " + sphereQueue.Count + " spheres (aka " + Mathf.CeilToInt((float)sphereQueue.Count / ChunkSize) + " chunks) for cell " + cellIndex);
-            }
-
             for (uint i = 0; i < Mathf.CeilToInt((float)sphereQueue.Count / ChunkSize); i++)
             {
                 uint startIndex = i * ChunkSize;
@@ -146,7 +141,8 @@ namespace SDF
             (int cellX, int cellY, int cellZ) = CellIndexForPosition(position);
             uint sphereQueueIndex = (uint)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
 
-            Sphere sphere = new() { position = position, radius = radius, color = new Vector3(1f, 1f, 1f) };
+            Color color = Color.green; // UnityEngine.Random.ColorHSV();
+            Sphere sphere = new() { position = position, radius = radius, color = new Vector3(color.r, color.g, color.b) };
 
             if (sphereQueueIndex >= 0 && sphereQueueIndex < _numCells)
             {
