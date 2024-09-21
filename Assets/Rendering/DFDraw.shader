@@ -215,8 +215,7 @@ Shader "Unlit/DFDraw"
                         float3 position = pointOnRay(marchingRay, result.length);
                         float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
                         float3 normalColor = normal * 0.5 + 0.5;
-                        float3 slightlyInsetPosition = position - normal * 0.1;
-                        float3 color = volumeTextureColor(slightlyInsetPosition, _ColorVolumeTexture);
+                        float3 color = volumeTextureColor(position, _ColorVolumeTexture);
                         col = fixed4((dot(normal, -normalizedLightDirection) * 0.5 + 0.5) * color, 1);
                         // col = fixed4(color, 1);
                         // col = fixed4(normal, 1);
