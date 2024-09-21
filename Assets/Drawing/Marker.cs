@@ -7,22 +7,24 @@ public class Marker
     private Vector3 _position;
     private Quaternion _orientation;
     private float _scale;
+    private Color _color;
 
     private readonly float _translationMarkThreshold = 0.1f;  // units: world space distance
     private readonly float _rotationMarkThreshold = 5f;  // units: degrees
     private readonly float _scaleMarkThreshold = 0.4f;  // units: ratio
 
-    public Marker(VolumeTexture sdfVolumeTexture, Vector3 initialPosition, Quaternion initialOrientation, float initialScale)
+    public Marker(VolumeTexture sdfVolumeTexture, Vector3 initialPosition, Quaternion initialOrientation, float initialScale, Color initialColor)
     {
         _position = initialPosition;
         _orientation = initialOrientation;
         _scale = Mathf.Max(initialScale, Mathf.Epsilon);
+        _color = initialColor;
 
-        sdfVolumeTexture.EnqueueSphere(initialPosition, initialScale);
+        sdfVolumeTexture.EnqueueSphere(initialPosition, initialScale, initialColor);
     }
 
     // TODO: Only update after cumulative movement/rotation/scale that passes a threshold
-    public void MarkTo(VolumeTexture sdfVolumeTexture, Vector3 newPosition, Quaternion newOrientation, float newScale)
+    public void MarkTo(VolumeTexture sdfVolumeTexture, Vector3 newPosition, Quaternion newOrientation, float newScale, Color newColor)
     {
         float numTranslationMarks = Vector3.Distance(_position, newPosition) / _translationMarkThreshold;
 
@@ -41,11 +43,14 @@ public class Marker
             // Quaternion markOrientation = Quaternion.Slerp(_orientation, newOrientation, t);
             float markScale = Mathf.Lerp(_scale, newScale, t);  // Won't generate linear size changes, but might be fine
 
-            sdfVolumeTexture.EnqueueSphere(markPosition, markScale);
+            Color markColor = Color.Lerp(_color, newColor, t);
+
+            sdfVolumeTexture.EnqueueSphere(markPosition, markScale, markColor);
         }
 
         _position = newPosition;
         _orientation = newOrientation;
         _scale = newScale;
+        _color = newColor;
     }
 }

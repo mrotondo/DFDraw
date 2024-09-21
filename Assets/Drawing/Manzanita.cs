@@ -19,6 +19,7 @@ public class Manzanita : MonoBehaviour
     public float BranchLengthChangeFactor = 0.9f; // ratio / branch
     public float BranchRadiusChangeFactor = 0.8f; // ratio / branch
     public float BranchAngleRangeChangeFactor = 0.8f; // ratio / branch
+    public Color BranchColor = Color.white;
     private System.Random _random;
     public int MaxBranchDepth = 5;
 
@@ -32,7 +33,7 @@ public class Manzanita : MonoBehaviour
         _random = new System.Random();
 
         _growingBranches = new List<Branch>() {
-            new(_sdfVolumeTexture, BasePosition, GrowthRate, InitialGrowthDirection, InitialRadius, RadiusGrowthRate, BranchLength, BranchAngleRange, 0)
+            new(_sdfVolumeTexture, BasePosition, GrowthRate, InitialGrowthDirection, InitialRadius, RadiusGrowthRate, BranchLength, BranchAngleRange, BranchColor, 0)
         };
     }
 
@@ -65,10 +66,11 @@ public class Manzanita : MonoBehaviour
         private readonly float _radiusGrowthRate;
         private readonly float _maxLength;
         private readonly float _branchAngleRange;
+        private readonly Color _color;
         public readonly int Depth;
         private readonly Marker _marker;
 
-        public Branch(VolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchAngleRange, int depth)
+        public Branch(VolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchAngleRange, Color color, int depth)
         {
             _initialPosition = _position = position;
             _growthRate = growthRate;
@@ -77,8 +79,9 @@ public class Manzanita : MonoBehaviour
             _radiusGrowthRate = radiusGrowthRate;
             _maxLength = maxLength * Random.Range(0.7f, 1.3f);
             _branchAngleRange = branchAngleRange;
+            _color = color;
             Depth = depth;
-            _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius);
+            _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius, color);
         }
 
         private float Length()
@@ -111,6 +114,7 @@ public class Manzanita : MonoBehaviour
                     _radiusGrowthRate,
                     _maxLength * branchLengthChangeFactor,
                     _branchAngleRange * branchAngleRangeChangeFactor,
+                    _color,
                     Depth + 1);
             }
         }
@@ -119,7 +123,7 @@ public class Manzanita : MonoBehaviour
         {
             _position += _growthDirection * (_growthRate * Time.deltaTime);
             _radius *= 1 + (_radiusGrowthRate - 1) * Time.deltaTime;
-            _marker.MarkTo(sdfVolumeTexture, _position, Quaternion.identity, _radius);
+            _marker.MarkTo(sdfVolumeTexture, _position, Quaternion.identity, _radius, _color);
         }
     }
 }

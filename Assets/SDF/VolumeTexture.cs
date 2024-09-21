@@ -136,12 +136,11 @@ namespace SDF
             sphereQueue.Clear();
         }
 
-        public void EnqueueSphere(Vector3 position, float radius)
+        public void EnqueueSphere(Vector3 position, float radius, Color color)
         {
             (int cellX, int cellY, int cellZ) = CellIndexForPosition(position);
             uint sphereQueueIndex = (uint)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
 
-            Color color = Color.green; // UnityEngine.Random.ColorHSV();
             Sphere sphere = new() { position = position, radius = radius, color = new Vector3(color.r, color.g, color.b) };
 
             if (sphereQueueIndex >= 0 && sphereQueueIndex < _numCells)

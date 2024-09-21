@@ -74,6 +74,8 @@ public class PineTree : MonoBehaviour
         private readonly float _maxLength;
         private readonly Marker _marker;
 
+        private Color _color = new(0.4f, 0.2f, 0.05f);
+
         private float _branchTimeInterval;
         private float _timeAcc;
 
@@ -86,7 +88,7 @@ public class PineTree : MonoBehaviour
             _radiusGrowthRate = radiusGrowthRate;
             _maxLength = maxLength;
             _branchTimeInterval = branchTimeInterval;
-            _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius);
+            _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius, _color);
         }
 
         private float Length()
@@ -127,7 +129,7 @@ public class PineTree : MonoBehaviour
 
             _position += _growthDirection * (_growthRate * Time.deltaTime);
             _radius *= 1 + (_radiusGrowthRate - 1) * Time.deltaTime;
-            _marker.MarkTo(sdfVolumeTexture, _position, Quaternion.identity, _radius);
+            _marker.MarkTo(sdfVolumeTexture, _position, Quaternion.identity, _radius, _color);
         }
     }
 
@@ -142,6 +144,8 @@ public class PineTree : MonoBehaviour
         private readonly float _maxLength;
         private readonly Marker _marker;
 
+        private readonly Color _color = new(0.1f, 0.6f, 0.2f);
+
         public PineTreeBranch(VolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength)
         {
             _initialPosition = _position = position;
@@ -150,7 +154,7 @@ public class PineTree : MonoBehaviour
             _radius = radius;
             _radiusGrowthRate = radiusGrowthRate;
             _maxLength = maxLength * Random.Range(0.7f, 1.3f);
-            _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius);
+            _marker = new(sdfVolumeTexture, position, Quaternion.identity, radius, _color);
         }
 
         private float Length()
@@ -167,7 +171,7 @@ public class PineTree : MonoBehaviour
         {
             _position += _growthDirection * (_growthRate * Time.deltaTime);
             _radius *= 1 + (_radiusGrowthRate - 1) * Time.deltaTime;
-            _marker.MarkTo(sdfVolumeTexture, _position, Quaternion.identity, _radius);
+            _marker.MarkTo(sdfVolumeTexture, _position, Quaternion.identity, _radius, _color);
         }
     }
 
