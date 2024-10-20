@@ -21,7 +21,7 @@ namespace SDF
         private readonly uint[] _sphereCounts;
 
         public const uint ChunkSize = 1024;
-        private readonly ComputeBuffer _sphereBuffer;
+        private ComputeBuffer _sphereBuffer;
         private readonly int _clearKernel;
         private readonly int _blitSpheresKernel;
 
@@ -83,6 +83,11 @@ namespace SDF
             _updateSdfShader.SetBuffer(_blitSpheresKernel, "Spheres", _sphereBuffer);
 
             Clear(1.0f, Color.red);
+        }
+
+        public void DisposeOfComputeBuffer()
+        {
+            _sphereBuffer.Dispose();
         }
 
         private Vector3Int MinTexelForCell(uint cellIndex)

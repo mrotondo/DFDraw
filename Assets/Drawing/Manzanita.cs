@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using SDF;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEditor;
+using System.Collections;
 
 public class Manzanita : MonoBehaviour
 {
@@ -38,6 +40,19 @@ public class Manzanita : MonoBehaviour
         _growingBranches = new List<Branch>() {
             new(_sdfVolumeTexture, BasePosition, GrowthRate, InitialGrowthDirection, InitialRadius, RadiusGrowthRate, BranchLength, BranchAngleRange, BranchColor, 0)
         };
+    }
+
+    public void Quit()
+    {
+        StartCoroutine(CleanUpAndQuit());
+    }
+
+    IEnumerator CleanUpAndQuit()
+    {
+        yield return new WaitForEndOfFrame();
+        _sdfVolumeTexture.DisposeOfComputeBuffer();
+        EditorApplication.ExitPlaymode();
+        Application.Quit();
     }
 
     void Update()
