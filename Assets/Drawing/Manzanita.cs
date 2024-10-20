@@ -80,7 +80,7 @@ public class Manzanita : MonoBehaviour
             _growthDirection = growthDirection;
             _radius = radius;
             _radiusGrowthRate = radiusGrowthRate;
-            _maxLength = maxLength * Random.Range(0.7f, 1.3f);
+            _maxLength = maxLength;// * Random.Range(0.7f, 1.3f);
             _branchAngleRange = branchAngleRange;
             _color = color;
             Depth = depth;

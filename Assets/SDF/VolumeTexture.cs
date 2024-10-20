@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using System;
+using Unity.Collections;
 
 namespace SDF
 {
@@ -16,7 +17,8 @@ namespace SDF
         private readonly uint _cellsPerLayer;
         private readonly uint _cellSize;
         private readonly uint _numCells;
-        private readonly List<Sphere>[] _sphereQueues;
+        private readonly Sphere[][] _sphereQueues;
+        private readonly uint[] _sphereCounts;
 
         public const uint ChunkSize = 1024;
         private readonly ComputeBuffer _sphereBuffer;
@@ -59,10 +61,11 @@ namespace SDF
             };
             _colorVolumeTexture.Create();
 
-            _sphereQueues = new List<Sphere>[_numCells];
+            _sphereQueues = new Sphere[_numCells][];
+            _sphereCounts = new uint[_numCells];
             for (int i = 0; i < _numCells; i++)
             {
-                _sphereQueues[i] = new();
+                _sphereQueues[i] = new Sphere[ChunkSize];
             }
 
             int sizeOfSphereInBytes = 8 * 4;
@@ -119,21 +122,20 @@ namespace SDF
             int yThreadGroups = (int)(_cellSize / y);
             int zThreadGroups = (int)(_cellSize / z);
 
-            var sphereQueue = _sphereQueues[(int)cellIndex];
-            Vector3Int cellTexelOffset = MinTexelForCell(cellIndex);
-            _updateSdfShader.SetInts("TexelOffset", new int[] { cellTexelOffset.x, cellTexelOffset.y, cellTexelOffset.z, 0 });
-
-            for (uint i = 0; i < Mathf.CeilToInt((float)sphereQueue.Count / ChunkSize); i++)
+            var sphereQueue = _sphereQueues[cellIndex];
+            var numSpheres = _sphereCounts[cellIndex];
+            if (numSpheres > ChunkSize)
             {
-                uint startIndex = i * ChunkSize;
-                uint numSpheres = Math.Min(ChunkSize, (uint)sphereQueue.Count - startIndex);
-
-                _updateSdfShader.SetInt("NumSpheres", (int)numSpheres);
-                _sphereBuffer.SetData<Sphere>(sphereQueue, (int)startIndex, 0, (int)numSpheres);
-                _updateSdfShader.Dispatch(_blitSpheresKernel, xThreadGroups, yThreadGroups, zThreadGroups);
+                throw new Exception("Tried to render a cell with " + numSpheres + " spheres, more than Chunksize " + ChunkSize);
             }
 
-            sphereQueue.Clear();
+            Vector3Int cellTexelOffset = MinTexelForCell(cellIndex);
+            _updateSdfShader.SetInts("TexelOffset", new int[] { cellTexelOffset.x, cellTexelOffset.y, cellTexelOffset.z, 0 });
+            _updateSdfShader.SetInt("NumSpheres", (int)numSpheres);
+            _sphereBuffer.SetData<Sphere>(new NativeArray<Sphere>(sphereQueue, Allocator.Temp), 0, 0, (int)numSpheres);
+            _updateSdfShader.Dispatch(_blitSpheresKernel, xThreadGroups, yThreadGroups, zThreadGroups);
+
+            _sphereCounts[cellIndex] = 0;
         }
 
         public void EnqueueSphere(Vector3 position, float radius, Color color)
@@ -141,16 +143,9 @@ namespace SDF
             (int cellX, int cellY, int cellZ) = CellIndexForPosition(position);
             uint sphereQueueIndex = (uint)(cellZ * _cellsPerLayer + cellY * _cellsPerDimension + cellX);
 
-            Sphere sphere = new() { position = position, radius = radius, color = new Vector3(color.r, color.g, color.b) };
-
             if (sphereQueueIndex >= 0 && sphereQueueIndex < _numCells)
             {
-                var sphereQueue = _sphereQueues[(int)sphereQueueIndex];
-                sphereQueue.Add(sphere);
-                if (sphereQueue.Count == ChunkSize)
-                {
-                    RenderCell(sphereQueueIndex);
-                }
+                AddSphere(sphereQueueIndex, position, radius, color);
             }
 
             for (int x = -1; x <= 1; x++)
@@ -165,15 +160,29 @@ namespace SDF
                         uint offsetSphereQueueIndex = (uint)(offsetZ * _cellsPerLayer + offsetY * _cellsPerDimension + offsetX);
                         if (offsetSphereQueueIndex >= 0 && offsetSphereQueueIndex < _numCells)
                         {
-                            var sphereQueue = _sphereQueues[(int)offsetSphereQueueIndex];
-                            sphereQueue.Add(sphere);
-                            if (sphereQueue.Count == ChunkSize)
-                            {
-                                RenderCell(offsetSphereQueueIndex);
-                            }
+                            AddSphere(offsetSphereQueueIndex, position, radius, color);
                         }
                     }
                 }
+            }
+        }
+
+        private void AddSphere(uint cellIndex, Vector3 position, float radius, Color color)
+        {
+            var numSpheres = _sphereCounts[cellIndex];
+            var sphereQueue = _sphereQueues[cellIndex];
+            sphereQueue[numSpheres].position = position;
+            sphereQueue[numSpheres].radius = radius;
+            sphereQueue[numSpheres].color.x = color.r;
+            sphereQueue[numSpheres].color.y = color.g;
+            sphereQueue[numSpheres].color.z = color.b;
+
+            numSpheres += 1;
+            _sphereCounts[cellIndex] = numSpheres;
+
+            if (numSpheres == ChunkSize)
+            {
+                RenderCell(cellIndex);
             }
         }
 
