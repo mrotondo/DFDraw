@@ -39,7 +39,7 @@ namespace SDF
             _numCells = cellsPerDimension * cellsPerDimension * cellsPerDimension;
             _cellSize = size / cellsPerDimension;
 
-            _sdfVolumeTexture = new RenderTexture((int)size, (int)size, 0, RenderTextureFormat.R8)
+            _sdfVolumeTexture = new RenderTexture((int)size, (int)size, 0, RenderTextureFormat.RFloat)
             {
                 enableRandomWrite = true,
                 dimension = TextureDimension.Tex3D,

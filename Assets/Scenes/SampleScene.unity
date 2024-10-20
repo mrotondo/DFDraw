@@ -266,7 +266,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 12725753ae55b4b8da0425ee729a7b9d, type: 3}
   m_Name: 
@@ -276,15 +276,17 @@ MonoBehaviour:
   BasePosition: {x: 0.5, y: 0, z: 0.5}
   GrowthRate: 0.1
   InitialGrowthDirection: {x: 0, y: 1, z: 0}
-  InitialRadius: 0.03
+  InitialRadius: 0.05
   RadiusGrowthRate: 0.8
   BranchLength: 0.25
-  BranchAngleRange: 20
+  BranchAngleRange: 45
   BranchLengthChangeFactor: 0.7
   BranchRadiusChangeFactor: 0.6
   BranchAngleRangeChangeFactor: 1.2
-  BranchColor: {r: 1, g: 1, b: 1, a: 1}
+  BranchColor: {r: 0.34, g: 0.25356066, b: 0.16116, a: 1}
+  LeafColor: {r: 0.1, g: 0.6, b: 0.2, a: 1}
   MaxBranchDepth: 17
+  MinBranchLength: 0.0001
 --- !u!114 &963194232
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -292,7 +294,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5404aef935d654aa9aa35548162082b7, type: 3}
   m_Name: 

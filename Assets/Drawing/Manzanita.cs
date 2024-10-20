@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using SDF;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Manzanita : MonoBehaviour
@@ -19,9 +20,11 @@ public class Manzanita : MonoBehaviour
     public float BranchLengthChangeFactor = 0.9f; // ratio / branch
     public float BranchRadiusChangeFactor = 0.8f; // ratio / branch
     public float BranchAngleRangeChangeFactor = 0.8f; // ratio / branch
-    public Color BranchColor = Color.white;
+    public Color BranchColor = new(0.4f, 0.2f, 0.05f);
+    public Color LeafColor = new(0.1f, 0.6f, 0.2f);
     private System.Random _random;
     public int MaxBranchDepth = 5;
+    public float MinBranchLength = 0.001f;
 
     private List<Branch> _growingBranches;
 
@@ -47,7 +50,7 @@ public class Manzanita : MonoBehaviour
             branch.GrowAndRender(_sdfVolumeTexture);
             if (branch.ReadyToBranch() && branch.Depth < MaxBranchDepth)
             {
-                newBranches.AddRange(branch.CreateBranches(_random, _sdfVolumeTexture, BranchRadiusChangeFactor, BranchLengthChangeFactor, BranchAngleRangeChangeFactor, MaxBranchDepth));
+                newBranches.AddRange(branch.CreateBranches(_random, _sdfVolumeTexture, BranchRadiusChangeFactor, BranchLengthChangeFactor, BranchAngleRangeChangeFactor, BranchColor, LeafColor, MaxBranchDepth, MinBranchLength));
             }
         }
         _growingBranches.RemoveAll(branch => branch.ReadyToBranch());
@@ -94,16 +97,28 @@ public class Manzanita : MonoBehaviour
             return Length() > _maxLength;
         }
 
-        public IEnumerable<Branch> CreateBranches(System.Random random, VolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, int maxBranchDepth)
+        public IEnumerable<Branch> CreateBranches(System.Random random, VolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, Color branchColor, Color leafColor, int maxBranchDepth, float minBranchLength)
         {
             float t = (float)Depth / maxBranchDepth;
             int numBranches = random.Next(Mathf.FloorToInt(Mathf.Lerp(3,1,t)), Mathf.FloorToInt(Mathf.Lerp(5,2,t)));
             for (int i = 0; i < numBranches; i++)
             {
+                float branchLength = _maxLength * branchLengthChangeFactor;
+                if (branchLength <= minBranchLength)
+                {
+                    continue;
+                }
+
                 var circlePosition = Random.insideUnitCircle * Mathf.Tan(_branchAngleRange * Mathf.Deg2Rad);
                 var circlePositionProjectedUpwards = new Vector3(circlePosition.x, 1, circlePosition.y);
                 var rotation = Quaternion.FromToRotation(Vector3.up, circlePositionProjectedUpwards);
                 var newGrowthDirection = rotation * _growthDirection;
+
+                Color color = branchColor;
+                if (t > 0.3f)
+                {
+                    color = leafColor;
+                }
 
                 yield return new(
                     sdfVolumeTexture,
@@ -112,9 +127,9 @@ public class Manzanita : MonoBehaviour
                     newGrowthDirection,
                     _radius * branchRadiusChangeFactor,
                     _radiusGrowthRate,
-                    _maxLength * branchLengthChangeFactor,
+                    branchLength,
                     _branchAngleRange * branchAngleRangeChangeFactor,
-                    _color,
+                    color,
                     Depth + 1);
             }
         }
