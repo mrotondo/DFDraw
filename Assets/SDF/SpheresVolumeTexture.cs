@@ -6,7 +6,7 @@ using Unity.Collections;
 
 namespace SDF
 {
-    public class VolumeTexture
+    public class SpheresVolumeTexture
     {
         private readonly uint _size;
         private readonly RenderTexture _sdfVolumeTexture;
@@ -33,7 +33,7 @@ namespace SDF
             float unusedPadding;
         }
 
-        public VolumeTexture(uint size, uint cellsPerDimension)
+        public SpheresVolumeTexture(uint size, uint cellsPerDimension)
         {
             _size = size;
             _cellsPerDimension = cellsPerDimension;
@@ -71,7 +71,7 @@ namespace SDF
             int sizeOfSphereInBytes = 8 * 4;
             _sphereBuffer = new((int)ChunkSize, sizeOfSphereInBytes);
 
-            _updateSdfShader = StaticResourcesLoader.UpdateSdfShader;
+            _updateSdfShader = StaticResourcesLoader.SpheresVolumeTextureShader;
 
             _clearKernel = _updateSdfShader.FindKernel("Clear");
             _updateSdfShader.SetTexture(_clearKernel, "SdfVolumeTexture", _sdfVolumeTexture);

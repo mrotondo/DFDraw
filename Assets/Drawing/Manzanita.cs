@@ -10,7 +10,7 @@ public class Manzanita : MonoBehaviour
     public uint SdfVolumeSideLength = 128;
     public uint SdfVolumeNumCellsPerDimension;
 
-    private VolumeTexture _sdfVolumeTexture;
+    private SpheresVolumeTexture _sdfVolumeTexture;
 
     public Vector3 BasePosition = new(0.5f, 0.0f, 0.5f);
     public float GrowthRate = 0.5f; // world units / second
@@ -32,7 +32,7 @@ public class Manzanita : MonoBehaviour
 
     void Start()
     {
-        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
+        _sdfVolumeTexture = new SpheresVolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
         _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
         _random = new System.Random();
@@ -88,7 +88,7 @@ public class Manzanita : MonoBehaviour
         public readonly int Depth;
         private readonly Marker _marker;
 
-        public Branch(VolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchAngleRange, Color color, int depth)
+        public Branch(SpheresVolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchAngleRange, Color color, int depth)
         {
             _initialPosition = _position = position;
             _growthRate = growthRate;
@@ -112,7 +112,7 @@ public class Manzanita : MonoBehaviour
             return Length() > _maxLength;
         }
 
-        public IEnumerable<Branch> CreateBranches(System.Random random, VolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, Color branchColor, Color leafColor, int maxBranchDepth, float minBranchLength)
+        public IEnumerable<Branch> CreateBranches(System.Random random, SpheresVolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor, float branchAngleRangeChangeFactor, Color branchColor, Color leafColor, int maxBranchDepth, float minBranchLength)
         {
             float t = (float)Depth / maxBranchDepth;
             int numBranches = random.Next(Mathf.FloorToInt(Mathf.Lerp(3,1,t)), Mathf.FloorToInt(Mathf.Lerp(5,2,t)));
@@ -149,7 +149,7 @@ public class Manzanita : MonoBehaviour
             }
         }
 
-        public void GrowAndRender(VolumeTexture sdfVolumeTexture)
+        public void GrowAndRender(SpheresVolumeTexture sdfVolumeTexture)
         {
             _position += _growthDirection * (_growthRate * Time.deltaTime);
             _radius *= 1 + (_radiusGrowthRate - 1) * Time.deltaTime;

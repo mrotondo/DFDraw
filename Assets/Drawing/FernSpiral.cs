@@ -6,7 +6,7 @@ public class FernSpiral : MonoBehaviour
     public uint SdfVolumeSideLength;
     public uint SdfVolumeNumCellsPerDimension;
 
-    private VolumeTexture _sdfVolumeTexture;
+    private SpheresVolumeTexture _sdfVolumeTexture;
     private Marker _marker;
 
     public Vector3 MarkerPosition = new(0.25f, 0.0f, 0.5f);
@@ -24,7 +24,7 @@ public class FernSpiral : MonoBehaviour
 
     void Start()
     {
-        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
+        _sdfVolumeTexture = new SpheresVolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
         _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
         _color = InitialColor;

@@ -13,7 +13,7 @@ public class Marker
     private readonly float _rotationMarkThreshold = 5f;  // units: degrees
     private readonly float _scaleMarkThreshold = 0.4f;  // units: ratio
 
-    public Marker(VolumeTexture sdfVolumeTexture, Vector3 initialPosition, Quaternion initialOrientation, float initialScale, Color initialColor)
+    public Marker(SpheresVolumeTexture sdfVolumeTexture, Vector3 initialPosition, Quaternion initialOrientation, float initialScale, Color initialColor)
     {
         _position = initialPosition;
         _orientation = initialOrientation;
@@ -24,7 +24,7 @@ public class Marker
     }
 
     // TODO: Only update after cumulative movement/rotation/scale that passes a threshold
-    public void MarkTo(VolumeTexture sdfVolumeTexture, Vector3 newPosition, Quaternion newOrientation, float newScale, Color newColor)
+    public void MarkTo(SpheresVolumeTexture sdfVolumeTexture, Vector3 newPosition, Quaternion newOrientation, float newScale, Color newColor)
     {
         float numTranslationMarks = Vector3.Distance(_position, newPosition) / _translationMarkThreshold;
 

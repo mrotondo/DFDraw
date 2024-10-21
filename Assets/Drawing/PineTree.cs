@@ -7,7 +7,7 @@ public class PineTree : MonoBehaviour
     public uint SdfVolumeSideLength = 128;
     public uint SdfVolumeNumCellsPerDimension;
 
-    private VolumeTexture _sdfVolumeTexture;
+    private SpheresVolumeTexture _sdfVolumeTexture;
 
     public Vector3 BasePosition = new(0.5f, 0.0f, 0.5f);
     public float GrowthRate = 0.5f; // world units / second
@@ -31,7 +31,7 @@ public class PineTree : MonoBehaviour
 
     void Start()
     {
-        _sdfVolumeTexture = new VolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
+        _sdfVolumeTexture = new SpheresVolumeTexture(SdfVolumeSideLength, SdfVolumeNumCellsPerDimension);
         _sdfVolumeTexture.ConfigureRenderer(GetComponent<DFRenderer>());
 
         _random = new System.Random();
@@ -79,7 +79,7 @@ public class PineTree : MonoBehaviour
         private float _branchTimeInterval;
         private float _timeAcc;
 
-        public PineTreeTrunk(VolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchTimeInterval)
+        public PineTreeTrunk(SpheresVolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength, float branchTimeInterval)
         {
             _initialPosition = _position = position;
             _growthRate = growthRate;
@@ -106,7 +106,7 @@ public class PineTree : MonoBehaviour
             return Length() > _maxLength;
         }
 
-        public IEnumerable<PineTreeBranch> CreateBranches(System.Random random, VolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor)
+        public IEnumerable<PineTreeBranch> CreateBranches(System.Random random, SpheresVolumeTexture sdfVolumeTexture, float branchRadiusChangeFactor, float branchLengthChangeFactor)
         {
             _timeAcc = 0;
 
@@ -123,7 +123,7 @@ public class PineTree : MonoBehaviour
                 _maxLength * branchLengthChangeFactor * (0.2f + (_maxLength - Length()) / _maxLength));
         }
 
-        public void GrowAndRender(VolumeTexture sdfVolumeTexture)
+        public void GrowAndRender(SpheresVolumeTexture sdfVolumeTexture)
         {
             _timeAcc += Time.deltaTime;
 
@@ -146,7 +146,7 @@ public class PineTree : MonoBehaviour
 
         private readonly Color _color = new(0.1f, 0.6f, 0.2f);
 
-        public PineTreeBranch(VolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength)
+        public PineTreeBranch(SpheresVolumeTexture sdfVolumeTexture, Vector3 position, float growthRate, Vector3 growthDirection, float radius, float radiusGrowthRate, float maxLength)
         {
             _initialPosition = _position = position;
             _growthRate = growthRate;
@@ -167,7 +167,7 @@ public class PineTree : MonoBehaviour
             return Length() > _maxLength;
         }
 
-        public void GrowAndRender(VolumeTexture sdfVolumeTexture)
+        public void GrowAndRender(SpheresVolumeTexture sdfVolumeTexture)
         {
             _position += _growthDirection * (_growthRate * Time.deltaTime);
             _radius *= 1 + (_radiusGrowthRate - 1) * Time.deltaTime;
