@@ -123,14 +123,20 @@ Shader "Unlit/DFDraw"
                 return ray.origin + distance * ray.direction;
             }
 
-            float alphaToDistance(float alpha) {
-                return alpha * 2 - 1;
+            float map(float value, float min1, float max1, float min2, float max2) {
+                return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+            }
+            float3 map(float3 value, float min1, float max1, float min2, float max2) {
+                return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
             }
 
             // needs to eventually handle positions that aren't in [(0,0,0), (1,1,1)]
             float volumeTextureDistance(float3 samplePoint, sampler3D volumeTexture)
             {
-                return alphaToDistance(tex3D(volumeTexture, samplePoint).r);
+                float compressedDistance = tex3D(volumeTexture, samplePoint).r;
+                float decompressedDistance = map(compressedDistance, 0, 1, -1, 1);
+
+                return decompressedDistance;
             }
 
             float3 volumeTextureColor(float3 samplePoint, sampler3D volumeTexture)
@@ -214,11 +220,11 @@ Shader "Unlit/DFDraw"
                     if (distance < _DistanceThreshold) {
                         float3 position = pointOnRay(marchingRay, result.length);
                         float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
-                        float3 normalColor = normal * 0.5 + 0.5;
+                        float3 normalColor = map(normal, -1, 1, 0, 1);
                         float3 color = volumeTextureColor(position, _ColorVolumeTexture);
-                        col = fixed4((dot(normal, -normalizedLightDirection) * 0.5 + 0.5) * color, 1);
+                        // col = fixed4((dot(normal, -normalizedLightDirection) * 0.5 + 0.5) * color, 1);
                         // col = fixed4(color, 1);
-                        // col = fixed4(normal, 1);
+                        col = fixed4(normalColor, 1);
                     } else {
                         col = fixed4(0.1, 0.2, 0.3, 1);
                     }
