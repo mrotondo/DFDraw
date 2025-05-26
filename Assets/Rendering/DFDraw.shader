@@ -74,6 +74,7 @@ Shader "Unlit/DFDraw"
             int _MaxSteps;
             float _MaxMarchLength;
             float _MaxStepLength;
+            float _StepLengthInsideObjects;
 
             Ray fragmentRay(float verticalFieldOfView,
                 float3 camPosition,
@@ -100,6 +101,7 @@ Shader "Unlit/DFDraw"
                 return ray;
             }
 
+            // taken from somewhere
             RayAABBIntersectionResult aabbIntersection(Ray ray, AABB boundingBox) {
                 float3 inverse_dir = 1.0 / ray.direction;
                 float3 tbot = inverse_dir * (boundingBox.minBound - ray.origin);
@@ -156,7 +158,7 @@ Shader "Unlit/DFDraw"
                 return normalize(gradient);
             }
 
-            RayMarchResult volumeTextureMarch(Ray ray, sampler3D volumeTexture)
+            RayMarchResult volumeTextureMarchToSurface(Ray ray, sampler3D volumeTexture)
             {
                 float marchLength = 0;
                 int steps = 0;
@@ -176,6 +178,70 @@ Shader "Unlit/DFDraw"
                 result.steps = steps;
                 result.length = marchLength;
                 return result;
+            }
+
+            fixed4 surfaceColor(Ray marchingRay)
+            {
+                RayMarchResult result = volumeTextureMarchToSurface(marchingRay, _SdfVolumeTexture);
+                
+                float3 normalizedLightDirection = normalize(float3(-1, -1, -1));
+                float normalizedLength = result.length / _MaxMarchLength;
+                float normalizedSteps = result.steps / _MaxSteps;
+                float distance = result.distance;
+                fixed3 gray = normalizedSteps;
+                if (distance < _DistanceThreshold) {
+                    float3 position = pointOnRay(marchingRay, result.length);
+                    float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
+                    float3 normalColor = map(normal, -1, 1, 0, 1);
+                    float3 color = volumeTextureColor(position, _ColorVolumeTexture);
+                    return fixed4((dot(normal, -normalizedLightDirection) * 0.5 + 0.5) * color, 1);
+                    // return fixed4(color, 1);
+                    // return fixed4(normalColor, 1);
+                } else {
+                    return fixed4(0.1, 0.2, 0.3, 1);
+                }
+            }
+
+            fixed4 accumulatedColor(Ray marchingRay, sampler3D volumeTexture)
+            {
+                fixed4 accumulatedColor = fixed4(0, 0, 0, 1);
+                float remainingIntensity = 1;
+
+                float STEP_DISTANCE_INSIDE_OBJECTS = 0.001;
+                float materialAbsorbtion = 0.1;
+
+                float marchLength = 0;
+                int steps = 0;
+                float3 samplePoint = pointOnRay(marchingRay, marchLength);
+                float distance = volumeTextureDistance(samplePoint, volumeTexture);
+                [loop]
+                while (steps < _MaxSteps
+                       && marchLength < _MaxMarchLength
+                       && remainingIntensity > 0) {
+
+                    if (abs(distance) > _DistanceThreshold) // not inside an object
+                    {
+                        marchLength += min(_MaxStepLength, abs(distance));
+                    }
+                    else // on or inside an object
+                    {
+                        // this should at some point take into account how long of a step we took through the material
+                        // 
+                        float3 position = pointOnRay(marchingRay, marchLength);
+                        float3 color = volumeTextureColor(position, _ColorVolumeTexture);
+
+                        accumulatedColor += fixed4(color * materialAbsorbtion * remainingIntensity, 0);
+                        remainingIntensity -= materialAbsorbtion;
+
+                        marchLength += _StepLengthInsideObjects;
+                    }
+                    
+                    samplePoint = pointOnRay(marchingRay, marchLength);
+                    distance = volumeTextureDistance(samplePoint, volumeTexture);
+                    steps++;
+                }
+
+                return accumulatedColor;
             }
 
             v2f vert (appdata v)
@@ -203,8 +269,6 @@ Shader "Unlit/DFDraw"
                 boundingBox.minBound = float3(0, 0, 0);
                 boundingBox.maxBound = float3(1, 1, 1);
 
-                float3 normalizedLightDirection = normalize(float3(-1, -1, -1));
-
                 RayAABBIntersectionResult intersection = aabbIntersection(boundingBoxRay, boundingBox);
                 if (intersection.hit) {
                     float3 box_hit_position = pointOnRay(boundingBoxRay, intersection.tMin);
@@ -212,22 +276,8 @@ Shader "Unlit/DFDraw"
                     marchingRay.origin = box_hit_position;
                     marchingRay.direction = boundingBoxRay.direction;
 
-                    RayMarchResult result = volumeTextureMarch(marchingRay, _SdfVolumeTexture);
-                    float normalizedLength = result.length / _MaxMarchLength;
-                    float normalizedSteps = result.steps / _MaxSteps;
-                    float distance = result.distance;
-                    fixed3 gray = normalizedSteps;
-                    if (distance < _DistanceThreshold) {
-                        float3 position = pointOnRay(marchingRay, result.length);
-                        float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
-                        float3 normalColor = map(normal, -1, 1, 0, 1);
-                        float3 color = volumeTextureColor(position, _ColorVolumeTexture);
-                        // col = fixed4((dot(normal, -normalizedLightDirection) * 0.5 + 0.5) * color, 1);
-                        // col = fixed4(color, 1);
-                        col = fixed4(normalColor, 1);
-                    } else {
-                        col = fixed4(0.1, 0.2, 0.3, 1);
-                    }
+                    // col = surfaceColor(marchingRay);
+                    col = accumulatedColor(marchingRay, _SdfVolumeTexture);
                 } else {
                     col = fixed4(0, 0, 0, 1);
                 }

@@ -672,6 +672,7 @@ MonoBehaviour:
   MaxSteps: 200
   MaxMarchLength: 3
   MaxStepLength: 0.01
+  StepLengthInsideObjects: 0.01
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -695,7 +696,7 @@ MonoBehaviour:
   MarkerRadius: 0.1
   MarkerRadiusGrowthRate: 0.8
   InitialColor: {r: 0, g: 0, b: 0, a: 1}
-  ColorGrowthRate: {x: 0.1, y: 0.1, z: 0.1}
+  ColorGrowthRate: {x: 0.1, y: 0.2, z: 0.3}
 --- !u!114 &963194231
 MonoBehaviour:
   m_ObjectHideFlags: 0

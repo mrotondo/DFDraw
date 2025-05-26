@@ -8,6 +8,7 @@ public class DFRenderer : MonoBehaviour
     public int MaxSteps;
     public float MaxMarchLength;
     public float MaxStepLength;
+    public float StepLengthInsideObjects = 0.01f;
 
     public RenderTexture SdfVolumeTexture
     {
@@ -34,6 +35,7 @@ public class DFRenderer : MonoBehaviour
         dfMaterial.SetInt("_MaxSteps", MaxSteps);
         dfMaterial.SetFloat("_MaxMarchLength", MaxMarchLength);
         dfMaterial.SetFloat("_MaxStepLength", MaxStepLength);
+        dfMaterial.SetFloat("_StepLengthInsideObjects", StepLengthInsideObjects);
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dst)
