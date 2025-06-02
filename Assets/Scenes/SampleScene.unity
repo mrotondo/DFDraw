@@ -668,7 +668,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dfMaterial: {fileID: 2100000, guid: 167a7520116804f5aa339ef655419281, type: 2}
-  DistanceThreshold: 0.005
+  DistanceThreshold: 0.001
   MaxSteps: 200
   MaxMarchLength: 3
   MaxStepLength: 0.01
@@ -685,7 +685,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0448c1e9ebd7448dbaf2f6a5d2779a0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SdfVolumeSideLength: 512
+  SdfVolumeSideLength: 256
   SdfVolumeNumCellsPerDimension: 8
   MarkerPosition: {x: 0.3, y: 0, z: 0.8}
   MarkerMovementSpeed: 0.6
@@ -695,8 +695,8 @@ MonoBehaviour:
   MarkerMaxTurnSpeedGrowthRate: 1.2
   MarkerRadius: 0.1
   MarkerRadiusGrowthRate: 0.8
-  InitialColor: {r: 0, g: 0, b: 0, a: 1}
-  ColorGrowthRate: {x: 0.1, y: 0.2, z: 0.3}
+  InitialColor: {r: 1, g: 0, b: 0, a: 1}
+  ColorGrowthRate: {x: -0.1, y: 0.1, z: 0.3}
 --- !u!114 &963194231
 MonoBehaviour:
   m_ObjectHideFlags: 0

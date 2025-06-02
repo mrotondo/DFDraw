@@ -19,7 +19,7 @@ public class FernSpiral : MonoBehaviour
     public float MarkerRadiusGrowthRate = 0.999f; // growth rate / second
 
     public Color InitialColor = Color.black;
-    public Vector3 ColorGrowthRate = new(0.1f, 0.2f, 0.3f); // rgb / second
+    public Vector3 ColorGrowthRate = new(0.1f, 0.1f, 0.1f); // rgb / second
     private Color _color;
 
     void Start()

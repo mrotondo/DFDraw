@@ -18,6 +18,8 @@ Shader "Unlit/DFDraw"
 
             #include "UnityCG.cginc"
 
+            #define MAX_RAYS 4
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -34,6 +36,12 @@ Shader "Unlit/DFDraw"
             {
                 float3 origin;
                 float3 direction;
+            };
+
+            struct WeightedRay
+            {
+                float weight;
+                Ray ray;
             };
 
             struct AABB
@@ -101,6 +109,14 @@ Shader "Unlit/DFDraw"
                 return ray;
             }
 
+            AABB renderVolumeBoundingBox()
+            {
+                AABB boundingBox;
+                boundingBox.minBound = float3(0, 0, 0);
+                boundingBox.maxBound = float3(1, 1, 1);
+                return boundingBox;
+            }
+
             // taken from somewhere
             RayAABBIntersectionResult aabbIntersection(Ray ray, AABB boundingBox) {
                 float3 inverse_dir = 1.0 / ray.direction;
@@ -118,6 +134,12 @@ Shader "Unlit/DFDraw"
                 result.tMin = traverselow;
                 result.tMax = traversehi;
                 return result;
+            }
+
+            float3 reflect(float3 v, float3 n)
+            {
+                float3 projectionOntoNormal = n * dot(v, n);
+                return v - 2 * projectionOntoNormal;
             }
             
             float3 pointOnRay(Ray ray, float distance)
@@ -204,44 +226,78 @@ Shader "Unlit/DFDraw"
 
             fixed4 accumulatedColor(Ray marchingRay, sampler3D volumeTexture)
             {
-                fixed4 accumulatedColor = fixed4(0, 0, 0, 1);
-                float remainingIntensity = 1;
+                fixed4 outputColor = fixed4(0, 0, 0, 1);
 
                 float STEP_DISTANCE_INSIDE_OBJECTS = 0.001;
                 float materialAbsorbtion = 0.1;
 
-                float marchLength = 0;
-                int steps = 0;
-                float3 samplePoint = pointOnRay(marchingRay, marchLength);
-                float distance = volumeTextureDistance(samplePoint, volumeTexture);
+                int numRays = 1;
+                WeightedRay weightedRays[MAX_RAYS];
+                
+                weightedRays[0].ray.origin = marchingRay.origin;
+                weightedRays[0].ray.direction = marchingRay.direction;
+                weightedRays[0].weight = 1;
+
+                int rayBeingMarched = 0;
                 [loop]
-                while (steps < _MaxSteps
-                       && marchLength < _MaxMarchLength
-                       && remainingIntensity > 0) {
+                while (rayBeingMarched < numRays)
+                {
+                    fixed3 rayColor = fixed3(0, 0, 0);
+                    float remainingIntensity = 1;
+                    float rayWeight = 1;
 
-                    if (abs(distance) > _DistanceThreshold) // not inside an object
-                    {
-                        marchLength += min(_MaxStepLength, abs(distance));
-                    }
-                    else // on or inside an object
-                    {
-                        // this should at some point take into account how long of a step we took through the material
-                        // 
-                        float3 position = pointOnRay(marchingRay, marchLength);
-                        float3 color = volumeTextureColor(position, _ColorVolumeTexture);
+                    float marchLength = 0;
+                    int steps = 0;
+                    Ray ray = weightedRays[rayBeingMarched].ray;
+                    float3 samplePoint = pointOnRay(ray, marchLength);
+                    float distance = volumeTextureDistance(samplePoint, volumeTexture);
+                    [loop]
+                    while (steps < _MaxSteps
+                           && marchLength < _MaxMarchLength
+                           && remainingIntensity > 0) {
+        
+                        float3 position = pointOnRay(ray, marchLength);
 
-                        accumulatedColor += fixed4(color * materialAbsorbtion * remainingIntensity, 0);
-                        remainingIntensity -= materialAbsorbtion;
+                        if (distance > _DistanceThreshold) // not inside an object
+                        {
+                            marchLength += min(_MaxStepLength, abs(distance));
+                        }
+                        else if (abs(distance) <= _DistanceThreshold) // on an object
+                        {
+                            if (numRays < MAX_RAYS)
+                            {
+                                float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
+                                Ray reflectedRay = { position, reflect(ray.direction, normal) };
+                                
+                                numRays += 1;
+                                weightedRays[numRays].weight = rayWeight * 0.5;
+                                weightedRays[numRays].ray.origin = reflectedRay.origin + reflectedRay.direction * _DistanceThreshold * 2;
+                                weightedRays[numRays].ray.direction = reflectedRay.direction;
 
-                        marchLength += _StepLengthInsideObjects;
+                                rayWeight *= 0.5;
+                            }
+                            marchLength += _DistanceThreshold * 2;
+                        }
+                        else // inside an object
+                        {
+                            // this should at some point take into account how long of a step we took through the material
+                            float3 color = volumeTextureColor(position, _ColorVolumeTexture);
+    
+                            rayColor += color * materialAbsorbtion * remainingIntensity;
+                            remainingIntensity -= materialAbsorbtion;
+                            marchLength += _StepLengthInsideObjects;
+                        }
+                        
+                        samplePoint = pointOnRay(ray, marchLength);
+                        distance = volumeTextureDistance(samplePoint, volumeTexture);
+                        steps++;
                     }
                     
-                    samplePoint = pointOnRay(marchingRay, marchLength);
-                    distance = volumeTextureDistance(samplePoint, volumeTexture);
-                    steps++;
+                    outputColor += fixed4(rayColor * rayWeight, 0);
+                    rayBeingMarched += 1;
                 }
 
-                return accumulatedColor;
+                return outputColor;
             }
 
             v2f vert (appdata v)
@@ -256,25 +312,13 @@ Shader "Unlit/DFDraw"
             {
                 fixed4 col;
 
-                Ray boundingBoxRay = fragmentRay(_VerticalFieldOfView,
-                                                 _CamPosition,
-                                                 _FarClipDistance,
-                                                 _AspectRatio,
-                                                 _CamRight.xyz,
-                                                 _CamUp.xyz,
-                                                 _CamForward.xyz,
-                                                 i.uv);
-
-                AABB boundingBox;
-                boundingBox.minBound = float3(0, 0, 0);
-                boundingBox.maxBound = float3(1, 1, 1);
+                Ray boundingBoxRay = fragmentRay(_VerticalFieldOfView, _CamPosition, _FarClipDistance, _AspectRatio, _CamRight.xyz, _CamUp.xyz, _CamForward.xyz, i.uv);
+                AABB boundingBox = renderVolumeBoundingBox();
 
                 RayAABBIntersectionResult intersection = aabbIntersection(boundingBoxRay, boundingBox);
                 if (intersection.hit) {
                     float3 box_hit_position = pointOnRay(boundingBoxRay, intersection.tMin);
-                    Ray marchingRay;
-                    marchingRay.origin = box_hit_position;
-                    marchingRay.direction = boundingBoxRay.direction;
+                    Ray marchingRay = { box_hit_position, boundingBoxRay.direction };
 
                     // col = surfaceColor(marchingRay);
                     col = accumulatedColor(marchingRay, _SdfVolumeTexture);
