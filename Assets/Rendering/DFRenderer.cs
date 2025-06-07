@@ -5,7 +5,6 @@ public class DFRenderer : MonoBehaviour
     public Material dfMaterial;
 
     public float DistanceThreshold;
-    public int MaxSteps;
     public float MaxMarchLength;
     public float MaxStepLength;
     public float StepLengthInsideObjects = 0.01f;
@@ -32,7 +31,6 @@ public class DFRenderer : MonoBehaviour
         dfMaterial.SetMatrix("_CamInverseProjectionMatrix", (camera.cameraToWorldMatrix * camera.projectionMatrix).inverse);
 
         dfMaterial.SetFloat("_DistanceThreshold", DistanceThreshold);
-        dfMaterial.SetInt("_MaxSteps", MaxSteps);
         dfMaterial.SetFloat("_MaxMarchLength", MaxMarchLength);
         dfMaterial.SetFloat("_MaxStepLength", MaxStepLength);
         dfMaterial.SetFloat("_StepLengthInsideObjects", StepLengthInsideObjects);

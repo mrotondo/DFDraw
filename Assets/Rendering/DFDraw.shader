@@ -19,6 +19,7 @@ Shader "Unlit/DFDraw"
             #include "UnityCG.cginc"
 
             #define MAX_RAYS 4
+            #define MAX_STEPS 200
 
             struct appdata
             {
@@ -79,7 +80,6 @@ Shader "Unlit/DFDraw"
             float4 _ColorVolumeTexture_ST;
 
             float _DistanceThreshold;
-            int _MaxSteps;
             float _MaxMarchLength;
             float _MaxStepLength;
             float _StepLengthInsideObjects;
@@ -186,14 +186,16 @@ Shader "Unlit/DFDraw"
                 int steps = 0;
                 float3 samplePoint = pointOnRay(ray, marchLength);
                 float distance = volumeTextureDistance(samplePoint, volumeTexture);
-                [loop]
-                while (abs(distance) > _DistanceThreshold
-                       && steps < _MaxSteps
-                       && marchLength < _MaxMarchLength) {
-                    marchLength += min(_MaxStepLength, abs(distance));
-                    samplePoint = pointOnRay(ray, marchLength);
-                    distance = volumeTextureDistance(samplePoint, volumeTexture);
-                    steps++;
+
+                for (int step = 0; step < MAX_STEPS; step++)
+                {
+                    if (abs(distance) > _DistanceThreshold && marchLength < _MaxMarchLength)
+                    {
+                        marchLength += min(_MaxStepLength, abs(distance));
+                        samplePoint = pointOnRay(ray, marchLength);
+                        distance = volumeTextureDistance(samplePoint, volumeTexture);
+                        steps++;
+                    }
                 }
                 RayMarchResult result;
                 result.distance = distance;
@@ -208,7 +210,7 @@ Shader "Unlit/DFDraw"
                 
                 float3 normalizedLightDirection = normalize(float3(-1, -1, -1));
                 float normalizedLength = result.length / _MaxMarchLength;
-                float normalizedSteps = result.steps / _MaxSteps;
+                float normalizedSteps = result.steps / MAX_STEPS;
                 float distance = result.distance;
                 fixed3 gray = normalizedSteps;
                 if (distance < _DistanceThreshold) {
@@ -237,64 +239,70 @@ Shader "Unlit/DFDraw"
                 weightedRays[0].ray.origin = marchingRay.origin;
                 weightedRays[0].ray.direction = marchingRay.direction;
                 weightedRays[0].weight = 1;
-
-                int rayBeingMarched = 0;
-                [loop]
-                while (rayBeingMarched < numRays)
+                for (int i = 1; i < MAX_RAYS; i++)
                 {
-                    fixed3 rayColor = fixed3(0, 0, 0);
-                    float remainingIntensity = 1;
-                    float rayWeight = 1;
+                    weightedRays[i].ray.origin = float3(0, 0, 0);
+                    weightedRays[i].ray.direction = float3(0, 0, 0);
+                    weightedRays[i].weight = 0;
+                }
 
-                    float marchLength = 0;
-                    int steps = 0;
-                    Ray ray = weightedRays[rayBeingMarched].ray;
-                    float3 samplePoint = pointOnRay(ray, marchLength);
-                    float distance = volumeTextureDistance(samplePoint, volumeTexture);
-                    [loop]
-                    while (steps < _MaxSteps
-                           && marchLength < _MaxMarchLength
-                           && remainingIntensity > 0) {
-        
-                        float3 position = pointOnRay(ray, marchLength);
-
-                        if (distance > _DistanceThreshold) // not inside an object
-                        {
-                            marchLength += min(_MaxStepLength, abs(distance));
-                        }
-                        else if (abs(distance) <= _DistanceThreshold) // on an object
-                        {
-                            if (numRays < MAX_RAYS)
-                            {
-                                float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
-                                Ray reflectedRay = { position, reflect(ray.direction, normal) };
-                                
-                                numRays += 1;
-                                weightedRays[numRays].weight = rayWeight * 0.5;
-                                weightedRays[numRays].ray.origin = reflectedRay.origin + reflectedRay.direction * _DistanceThreshold * 2;
-                                weightedRays[numRays].ray.direction = reflectedRay.direction;
-
-                                rayWeight *= 0.5;
-                            }
-                            marchLength += _DistanceThreshold * 2;
-                        }
-                        else // inside an object
-                        {
-                            // this should at some point take into account how long of a step we took through the material
-                            float3 color = volumeTextureColor(position, _ColorVolumeTexture);
+                [loop]
+                for (int rayBeingMarched = 0; rayBeingMarched < MAX_RAYS; rayBeingMarched++)
+                {
+                    if (rayBeingMarched < numRays)
+                    {
+                        fixed3 rayColor = fixed3(0, 0, 0);
+                        float remainingIntensity = 1;
+                        float rayWeight = 1;
     
-                            rayColor += color * materialAbsorbtion * remainingIntensity;
-                            remainingIntensity -= materialAbsorbtion;
-                            marchLength += _StepLengthInsideObjects;
+                        float marchLength = 0; 
+                        int steps = 0;
+                        Ray ray = weightedRays[rayBeingMarched].ray;
+                        float3 samplePoint = pointOnRay(ray, marchLength);
+                        float distance = volumeTextureDistance(samplePoint, volumeTexture);
+                        for (int step = 0; step < MAX_STEPS; step++)
+                        {
+                            if (marchLength < _MaxMarchLength && remainingIntensity > 0)
+                            {
+                                float3 position = pointOnRay(ray, marchLength);
+    
+                                if (distance > _DistanceThreshold) // not inside an object
+                                {
+                                    marchLength += min(_MaxStepLength, abs(distance));
+                                }
+                                else if (abs(distance) <= _DistanceThreshold) // on an object
+                                {
+                                    if (numRays < MAX_RAYS)
+                                    {
+                                        float3 normal = volumeTextureNormal(position, _SdfVolumeTexture);
+                                        Ray reflectedRay = { position, reflect(ray.direction, normal) };
+                                        
+                                        numRays += 1;
+                                        weightedRays[numRays].weight = rayWeight * 0.5;
+                                        weightedRays[numRays].ray.origin = reflectedRay.origin + reflectedRay.direction * _DistanceThreshold * 2;
+                                        weightedRays[numRays].ray.direction = reflectedRay.direction;
+        
+                                        rayWeight *= 0.5;
+                                    }
+                                    marchLength += _DistanceThreshold * 2;
+                                }
+                                else // inside an object
+                                {
+                                    // this should at some point take into account how long of a step we took through the material
+                                    float3 color = volumeTextureColor(position, _ColorVolumeTexture);
+            
+                                    rayColor += color * materialAbsorbtion * remainingIntensity;
+                                    remainingIntensity -= materialAbsorbtion;
+                                    marchLength += _StepLengthInsideObjects;
+                                }
+                                
+                                samplePoint = pointOnRay(ray, marchLength);
+                                distance = volumeTextureDistance(samplePoint, volumeTexture);
+                            }
                         }
                         
-                        samplePoint = pointOnRay(ray, marchLength);
-                        distance = volumeTextureDistance(samplePoint, volumeTexture);
-                        steps++;
+                        outputColor += fixed4(rayColor * rayWeight, 0);
                     }
-                    
-                    outputColor += fixed4(rayColor * rayWeight, 0);
-                    rayBeingMarched += 1;
                 }
 
                 return outputColor;
