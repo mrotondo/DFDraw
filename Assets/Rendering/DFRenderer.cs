@@ -21,6 +21,8 @@ public class DFRenderer : MonoBehaviour
     void Update()
     {
         var camera = GetComponent<Camera>();
+        dfMaterial.SetFloat("_ResolutionX", Screen.currentResolution.width);
+        dfMaterial.SetFloat("_ResolutionY", Screen.currentResolution.height);
         dfMaterial.SetVector("_CamPosition", camera.transform.position);
         dfMaterial.SetFloat("_VerticalFieldOfView", Mathf.Deg2Rad * camera.fieldOfView);
         dfMaterial.SetFloat("_FarClipDistance", camera.farClipPlane);

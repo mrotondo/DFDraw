@@ -65,6 +65,8 @@ Shader "Unlit/DFDraw"
                 float length;
             };
 
+            float _ResolutionX;
+            float _ResolutionY;
             float4 _CamPosition;
             float _VerticalFieldOfView;
             float _FarClipDistance;
@@ -308,21 +310,12 @@ Shader "Unlit/DFDraw"
                 return outputColor;
             }
 
-            v2f vert (appdata v)
-            {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _SdfVolumeTexture);
-                return o;
-            }
-
-            fixed4 frag (v2f i) : SV_Target
+            fixed4 colorAtUvCoord(float2 uv)
             {
                 fixed4 col;
 
-                Ray boundingBoxRay = fragmentRay(_VerticalFieldOfView, _CamPosition, _FarClipDistance, _AspectRatio, _CamRight.xyz, _CamUp.xyz, _CamForward.xyz, i.uv);
+                Ray boundingBoxRay = fragmentRay(_VerticalFieldOfView, _CamPosition, _FarClipDistance, _AspectRatio, _CamRight.xyz, _CamUp.xyz, _CamForward.xyz, uv);
                 AABB boundingBox = renderVolumeBoundingBox();
-
                 RayAABBIntersectionResult intersection = aabbIntersection(boundingBoxRay, boundingBox);
                 if (intersection.hit) {
                     float3 box_hit_position = pointOnRay(boundingBoxRay, intersection.tMin);
@@ -335,6 +328,28 @@ Shader "Unlit/DFDraw"
                 }
 
                 return col;
+            }
+
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = TRANSFORM_TEX(v.uv, _SdfVolumeTexture);
+                return o;
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                // supersampling
+                float2 uvPixelSize = 1 / float2(_ResolutionX, _ResolutionY);
+                float uvPixelCornerOffset = uvPixelSize * 0.35;
+                float2 uvTopLeft = i.uv - uvPixelCornerOffset;
+                float2 uvTopRight = i.uv - uvPixelCornerOffset * float2(1, -1);
+                float2 uvBottomLeft = i.uv + uvPixelCornerOffset * float2(-1, 1);
+                float2 uvBottomRight = i.uv + uvPixelCornerOffset;
+
+                // return 0.25 * colorAtUvCoord(uvTopLeft) + 0.25 * colorAtUvCoord(uvTopRight) + 0.25 * colorAtUvCoord(uvBottomLeft) + 0.25 * colorAtUvCoord(uvBottomRight);
+                return colorAtUvCoord(i.uv);
             }
             ENDCG
         }
