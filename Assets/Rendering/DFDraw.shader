@@ -19,7 +19,7 @@ Shader "Unlit/DFDraw"
             #include "UnityCG.cginc"
 
             #define MAX_RAYS 4
-            #define MAX_STEPS 200
+            #define MAX_STEPS 100
 
             struct appdata
             {
@@ -156,6 +156,69 @@ Shader "Unlit/DFDraw"
                 return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
             }
 
+            // noise work, largely inspired/taken from iquilez
+            float hash(float3 p)  // replace this by something better
+            {
+                p  = 50.0*frac( p*0.3183099 + float3(0.71,0.113,0.419));
+                return -1.0+2.0*frac( p.x*p.y*p.z*(p.x+p.y+p.z) );
+            }
+
+            float noise( in float3 x )
+            {
+                // grid
+                float3 p = floor(x);
+                float3 w = frac(x);
+                
+                // quintic interpolant
+                float3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
+                
+                // gradients
+                float3 ga = hash( p+float3(0.0,0.0,0.0) );
+                float3 gb = hash( p+float3(1.0,0.0,0.0) );
+                float3 gc = hash( p+float3(0.0,1.0,0.0) );
+                float3 gd = hash( p+float3(1.0,1.0,0.0) );
+                float3 ge = hash( p+float3(0.0,0.0,1.0) );
+                float3 gf = hash( p+float3(1.0,0.0,1.0) );
+                float3 gg = hash( p+float3(0.0,1.0,1.0) );
+                float3 gh = hash( p+float3(1.0,1.0,1.0) );
+                
+                // projections
+                float va = dot( ga, w-float3(0.0,0.0,0.0) );
+                float vb = dot( gb, w-float3(1.0,0.0,0.0) );
+                float vc = dot( gc, w-float3(0.0,1.0,0.0) );
+                float vd = dot( gd, w-float3(1.0,1.0,0.0) );
+                float ve = dot( ge, w-float3(0.0,0.0,1.0) );
+                float vf = dot( gf, w-float3(1.0,0.0,1.0) );
+                float vg = dot( gg, w-float3(0.0,1.0,1.0) );
+                float vh = dot( gh, w-float3(1.0,1.0,1.0) );
+                
+                // interpolation
+                return va + 
+                    u.x*(vb-va) + 
+                    u.y*(vc-va) + 
+                    u.z*(ve-va) + 
+                    u.x*u.y*(va-vb-vc+vd) + 
+                    u.y*u.z*(va-vc-ve+vg) + 
+                    u.z*u.x*(va-vb-ve+vf) + 
+                    u.x*u.y*u.z*(-va+vb+vc-vd+ve-vf-vg+vh);
+            }
+
+            float fbm( in float3 x, in float H )
+            {    
+                float G = exp2(-H);
+                float f = 1.0;
+                float a = 1.0;
+                float t = 0.0;
+                [loop]
+                for( int i = 0; i < 8; i++ )
+                {
+                    t += a*noise(f*x);
+                    f *= 2.0;
+                    a *= G;
+                }
+                return t;
+            }
+
             // needs to eventually handle positions that aren't in [(0,0,0), (1,1,1)]
             float volumeTextureDistance(float3 samplePoint, sampler3D volumeTexture)
             {
@@ -233,7 +296,6 @@ Shader "Unlit/DFDraw"
                 fixed4 outputColor = fixed4(0, 0, 0, 1);
 
                 float STEP_DISTANCE_INSIDE_OBJECTS = 0.001;
-                float materialAbsorbtion = 0.1;
 
                 int numRays = 1;
                 WeightedRay weightedRays[MAX_RAYS];
@@ -267,6 +329,9 @@ Shader "Unlit/DFDraw"
                             if (marchLength < _MaxMarchLength && remainingIntensity > 0)
                             {
                                 float3 position = pointOnRay(ray, marchLength);
+
+                                float noiseScale = 8;
+                                float materialAbsorbtion = 0.2 + 0.5 * fbm(position * noiseScale, 0.5);
     
                                 if (distance > _DistanceThreshold) // not inside an object
                                 {

@@ -670,7 +670,7 @@ MonoBehaviour:
   dfMaterial: {fileID: 2100000, guid: 167a7520116804f5aa339ef655419281, type: 2}
   DistanceThreshold: 0.00001
   MaxMarchLength: 3
-  MaxStepLength: 0.01
+  MaxStepLength: 0.5
   StepLengthInsideObjects: 0.01
 --- !u!114 &963194230
 MonoBehaviour:
