@@ -331,7 +331,7 @@ Shader "Unlit/DFDraw"
                                 float3 position = pointOnRay(ray, marchLength);
 
                                 float noiseScale = 8;
-                                float materialAbsorbtion = 0.2 + 0.5 * fbm(position * noiseScale, 0.5);
+                                float materialAbsorbtion = 0.1 + 0.3 * fbm(position * noiseScale, 0.5);
     
                                 if (distance > _DistanceThreshold) // not inside an object
                                 {
